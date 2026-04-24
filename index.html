@@ -1,0 +1,2657 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Linear & Quadratic Programming — Interactive Lecture</title>
+<style>
+  :root {
+    --bg: #fafaf7;
+    --bg-panel: #ffffff;
+    --ink: #1a1a1a;
+    --ink-soft: #555;
+    --ink-faint: #888;
+    --rule: #e4e2dc;
+    --accent-lp: #2b6cb0;
+    --accent-lp-soft: #dbeafe;
+    --accent-qp: #6b46c1;
+    --accent-qp-soft: #e9d8fd;
+    --good: #2f855a;
+    --bad: #c53030;
+    --warn: #b7791f;
+    --shadow: 0 1px 2px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.06);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.6;
+    font-size: 16px;
+  }
+
+  header.lecture-head {
+    padding: 28px 40px 20px;
+    border-bottom: 1px solid var(--rule);
+    background: var(--bg-panel);
+  }
+  header.lecture-head h1 {
+    margin: 0 0 4px;
+    font-size: 26px;
+    letter-spacing: -0.01em;
+    font-weight: 600;
+  }
+  header.lecture-head .subtitle {
+    margin: 0;
+    color: var(--ink-soft);
+    font-size: 14px;
+  }
+  header.lecture-head .meta {
+    color: var(--ink-faint);
+    font-size: 12px;
+    margin-top: 10px;
+  }
+
+  nav.main-tabs {
+    display: flex;
+    background: var(--bg-panel);
+    border-bottom: 1px solid var(--rule);
+    padding: 0 40px;
+    gap: 4px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  nav.main-tabs button {
+    background: none;
+    border: none;
+    padding: 14px 22px;
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--ink-soft);
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    transition: color 0.15s, border-color 0.15s;
+    font-family: inherit;
+  }
+  nav.main-tabs button:hover { color: var(--ink); }
+  nav.main-tabs button.active[data-tab="lp"] {
+    color: var(--accent-lp);
+    border-bottom-color: var(--accent-lp);
+  }
+  nav.main-tabs button.active[data-tab="qp"] {
+    color: var(--accent-qp);
+    border-bottom-color: var(--accent-qp);
+  }
+
+  main {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 32px 40px 80px;
+  }
+
+  .panel { display: none; }
+  .panel.active { display: grid; grid-template-columns: 220px 1fr; gap: 40px; }
+
+  aside.toc {
+    position: sticky;
+    top: 64px;
+    align-self: start;
+    font-size: 13px;
+  }
+  aside.toc h3 {
+    margin: 0 0 8px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ink-faint);
+    font-weight: 600;
+  }
+  aside.toc ol {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    counter-reset: toc;
+  }
+  aside.toc ol li {
+    counter-increment: toc;
+    padding: 4px 0;
+  }
+  aside.toc ol li a {
+    color: var(--ink-soft);
+    text-decoration: none;
+    display: block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    border-left: 2px solid transparent;
+  }
+  aside.toc ol li a::before {
+    content: counter(toc) ". ";
+    color: var(--ink-faint);
+  }
+  aside.toc ol li a:hover { background: rgba(0,0,0,0.03); color: var(--ink); }
+  #panel-lp aside.toc ol li a.current { color: var(--accent-lp); border-left-color: var(--accent-lp); background: var(--accent-lp-soft); }
+  #panel-qp aside.toc ol li a.current { color: var(--accent-qp); border-left-color: var(--accent-qp); background: var(--accent-qp-soft); }
+
+  article { min-width: 0; }
+  article h2 {
+    font-size: 22px;
+    font-weight: 600;
+    margin: 0 0 16px;
+    padding-top: 8px;
+    letter-spacing: -0.01em;
+  }
+  #panel-lp article h2 { color: var(--accent-lp); }
+  #panel-qp article h2 { color: var(--accent-qp); }
+
+  article section {
+    margin-bottom: 56px;
+    scroll-margin-top: 72px;
+  }
+  article section:last-child { margin-bottom: 0; }
+
+  article p { margin: 0 0 14px; color: #2d2d2d; }
+  article .lead { font-size: 17px; color: var(--ink); }
+
+  .key-idea {
+    background: #fffbe6;
+    border-left: 3px solid var(--warn);
+    padding: 12px 18px;
+    margin: 16px 0;
+    border-radius: 0 6px 6px 0;
+    font-size: 15px;
+  }
+  .key-idea strong { color: var(--warn); }
+
+  .aside-note {
+    font-size: 13px;
+    color: var(--ink-soft);
+    border-left: 2px solid var(--rule);
+    padding: 2px 14px;
+    margin: 12px 0;
+  }
+
+  code, .math {
+    font-family: "SF Mono", "Menlo", "Consolas", monospace;
+    font-size: 0.93em;
+    background: rgba(0,0,0,0.04);
+    padding: 1px 5px;
+    border-radius: 3px;
+  }
+  .math { background: none; padding: 0; font-style: italic; }
+  .math .sub { font-size: 0.75em; vertical-align: -0.25em; font-style: normal; }
+  .math .sup { font-size: 0.75em; vertical-align: 0.4em; font-style: normal; }
+
+  .eq-block {
+    font-family: "SF Mono", "Menlo", "Consolas", monospace;
+    background: #f5f3ee;
+    padding: 14px 20px;
+    border-radius: 6px;
+    margin: 14px 0;
+    font-size: 15px;
+    line-height: 1.8;
+    overflow-x: auto;
+  }
+
+  /* Interactive panels */
+  .interactive {
+    background: var(--bg-panel);
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    padding: 20px;
+    margin: 20px 0;
+    box-shadow: var(--shadow);
+  }
+  .interactive-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+  .interactive-header h4 {
+    margin: 0;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ink-faint);
+    font-weight: 600;
+  }
+  .interactive-header .tag {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    background: var(--accent-lp-soft);
+    color: var(--accent-lp);
+    font-weight: 500;
+  }
+  #panel-qp .interactive-header .tag {
+    background: var(--accent-qp-soft);
+    color: var(--accent-qp);
+  }
+
+  .interactive-body {
+    display: grid;
+    grid-template-columns: 1fr 280px;
+    gap: 24px;
+    align-items: start;
+  }
+  .interactive-body.wide { grid-template-columns: 1fr; }
+
+  .plot-wrap {
+    position: relative;
+    background: #fff;
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  canvas.plot {
+    width: 100%;
+    height: 420px;
+    display: block;
+    cursor: default;
+  }
+
+  .controls { font-size: 14px; }
+  .controls .ctrl {
+    margin-bottom: 16px;
+  }
+  .controls label {
+    display: block;
+    font-size: 12px;
+    color: var(--ink-soft);
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .controls input[type="range"] {
+    width: 100%;
+  }
+  .controls .val {
+    font-family: "SF Mono", monospace;
+    font-size: 13px;
+    color: var(--ink);
+    float: right;
+  }
+  .controls button {
+    background: var(--accent-lp);
+    color: white;
+    border: none;
+    padding: 8px 14px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    margin-right: 6px;
+    margin-bottom: 6px;
+  }
+  #panel-qp .controls button { background: var(--accent-qp); }
+  .controls button.secondary,
+  #panel-qp .controls button.secondary {
+    background: transparent;
+    color: var(--ink);
+    border: 1px solid var(--rule);
+  }
+  .controls button.secondary:hover,
+  #panel-qp .controls button.secondary:hover {
+    background: rgba(0,0,0,0.04);
+  }
+  .controls button:hover { opacity: 0.9; }
+  .controls button:active { transform: translateY(1px); }
+
+  .readout {
+    background: #f5f3ee;
+    border-radius: 6px;
+    padding: 10px 14px;
+    margin-top: 10px;
+    font-size: 13px;
+    font-family: "SF Mono", monospace;
+    line-height: 1.8;
+  }
+  .readout .label-ro { color: var(--ink-faint); }
+  .readout .opt { color: var(--good); font-weight: 600; }
+
+  .toggle-row {
+    display: flex;
+    gap: 4px;
+    background: #f0ede5;
+    padding: 3px;
+    border-radius: 6px;
+    margin-bottom: 12px;
+  }
+  .toggle-row button,
+  #panel-qp .controls .toggle-row button {
+    flex: 1;
+    background: transparent;
+    color: var(--ink-soft);
+    padding: 6px 10px;
+    border-radius: 4px;
+    margin: 0;
+    font-size: 13px;
+  }
+  .toggle-row button.active,
+  #panel-qp .controls .toggle-row button.active {
+    background: white;
+    color: var(--ink);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+  }
+
+  ul.examples, ol.examples {
+    padding-left: 20px;
+  }
+  ul.examples li, ol.examples li {
+    margin-bottom: 8px;
+  }
+
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin: 16px 0;
+  }
+  .two-col .card {
+    background: var(--bg-panel);
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    padding: 16px;
+  }
+  .two-col .card h5 {
+    margin: 0 0 8px;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--ink-faint);
+    font-weight: 600;
+  }
+
+  .legend {
+    display: flex;
+    gap: 16px;
+    font-size: 12px;
+    color: var(--ink-soft);
+    margin-top: 8px;
+    flex-wrap: wrap;
+  }
+  .legend .sw {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+    vertical-align: middle;
+    margin-right: 4px;
+  }
+
+  .section-break {
+    text-align: center;
+    color: var(--ink-faint);
+    letter-spacing: 0.4em;
+    margin: 40px 0;
+    font-size: 12px;
+  }
+
+  hr.rule {
+    border: none;
+    border-top: 1px solid var(--rule);
+    margin: 32px 0;
+  }
+
+  .topic-banner {
+    background: var(--bg-panel);
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    margin-bottom: 16px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+
+  .diagram-explain {
+    background: #fbfaf5;
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--accent-lp);
+    padding: 14px 20px 12px;
+    margin: 0 0 40px;
+    border-radius: 0 6px 6px 0;
+    font-size: 14.5px;
+    line-height: 1.6;
+  }
+  #panel-qp .diagram-explain {
+    border-left-color: var(--accent-qp);
+  }
+  .diagram-explain h5 {
+    margin: 0 0 10px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--ink-faint);
+    font-weight: 600;
+  }
+  .diagram-explain p {
+    margin: 0 0 9px;
+  }
+  .diagram-explain p:last-child {
+    margin-bottom: 0;
+  }
+  .diagram-explain ul {
+    margin: 6px 0 9px;
+    padding-left: 20px;
+  }
+  .diagram-explain ul li {
+    margin: 6px 0;
+  }
+  .diagram-explain em.val {
+    color: var(--ink);
+    font-family: "SF Mono", monospace;
+    font-style: normal;
+    background: rgba(0,0,0,0.05);
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-size: 0.93em;
+  }
+  .topic-banner .banner-svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    background: linear-gradient(#fdfcf8, #faf8f2);
+  }
+  .topic-banner .banner-body {
+    padding: 16px 22px 14px;
+    border-top: 1px solid var(--rule);
+  }
+  .topic-banner .caption {
+    margin: 0 0 12px;
+    font-size: 14.5px;
+    color: var(--ink);
+    line-height: 1.5;
+    min-height: 48px;
+  }
+  .topic-banner .caption strong {
+    font-weight: 600;
+  }
+  #panel-lp .topic-banner .caption strong { color: var(--accent-lp); }
+  #panel-qp .topic-banner .caption strong { color: var(--accent-qp); }
+  .topic-banner .banner-controls {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-size: 12px;
+    color: var(--ink-faint);
+  }
+  .topic-banner .banner-play {
+    background: transparent;
+    border: 1px solid var(--rule);
+    padding: 3px 10px;
+    border-radius: 14px;
+    font-size: 12px;
+    cursor: pointer;
+    color: var(--ink-soft);
+    font-family: inherit;
+    min-width: 32px;
+  }
+  .topic-banner .banner-play:hover { color: var(--ink); background: rgba(0,0,0,0.03); }
+  .topic-banner .scene-dots {
+    display: flex;
+    gap: 8px;
+    margin-left: auto;
+  }
+  .topic-banner .scene-dots .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--rule);
+    cursor: pointer;
+    transition: background 0.3s, transform 0.3s;
+  }
+  .topic-banner .scene-dots .dot:hover { transform: scale(1.3); }
+  #panel-lp .topic-banner .scene-dots .dot.active { background: var(--accent-lp); }
+  #panel-qp .topic-banner .scene-dots .dot.active { background: var(--accent-qp); }
+
+  .topic-banner svg [data-scenes] {
+    transition: opacity 0.45s ease;
+  }
+
+  /* ============== LP scene animations ============== */
+  .banner-svg.scene-1 #lp-decision-pt {
+    animation: lp-wander 4.2s ease-in-out forwards;
+  }
+  @keyframes lp-wander {
+    0%   { transform: translate(110px, 170px); }
+    22%  { transform: translate(200px, 120px); }
+    48%  { transform: translate(290px, 150px); }
+    72%  { transform: translate(180px, 95px); }
+    100% { transform: translate(240px, 135px); }
+  }
+  .banner-svg.scene-2 #lp-c1 {
+    animation: lp-slide-in 0.9s ease-out forwards;
+  }
+  @keyframes lp-slide-in {
+    0%   { transform: translate(260px, -180px); opacity: 0; }
+    100% { transform: translate(0,0); opacity: 1; }
+  }
+  .banner-svg.scene-3 #lp-c2 {
+    animation: lp-slide-in2 0.9s ease-out forwards;
+  }
+  @keyframes lp-slide-in2 {
+    0%   { transform: translate(250px, -50px); opacity: 0; }
+    100% { transform: translate(0,0); opacity: 1; }
+  }
+  .banner-svg.scene-3 #lp-region {
+    animation: lp-region-in 0.7s 0.55s ease-out both;
+    transform-origin: 185px 150px;
+    transform-box: view-box;
+  }
+  @keyframes lp-region-in {
+    0%   { transform: scale(0.55); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  .banner-svg.scene-4 #lp-level-lines line { opacity: 0; }
+  .banner-svg.scene-4 #lp-level-lines line:nth-child(1) { animation: lp-fade-in 0.4s 0.00s ease-out forwards; }
+  .banner-svg.scene-4 #lp-level-lines line:nth-child(2) { animation: lp-fade-in 0.4s 0.12s ease-out forwards; }
+  .banner-svg.scene-4 #lp-level-lines line:nth-child(3) { animation: lp-fade-in 0.4s 0.24s ease-out forwards; }
+  .banner-svg.scene-4 #lp-level-lines line:nth-child(4) { animation: lp-fade-in 0.4s 0.36s ease-out forwards; }
+  .banner-svg.scene-4 #lp-level-lines line:nth-child(5) { animation: lp-fade-in 0.4s 0.48s ease-out forwards; }
+  .banner-svg.scene-5 #lp-level-lines line { opacity: 0.35; }
+  @keyframes lp-fade-in {
+    0% { opacity: 0; } 100% { opacity: 0.55; }
+  }
+  .banner-svg.scene-5 #lp-sweep {
+    animation: lp-sweep 3.2s cubic-bezier(.2,.6,.3,1) forwards;
+  }
+  @keyframes lp-sweep {
+    0%   { transform: translate(-150px, 200px); }
+    85%  { transform: translate(0, 0); }
+    100% { transform: translate(0, 0); }
+  }
+  .banner-svg.scene-5 #lp-optimum {
+    animation: lp-opt-pop 0.5s 2.6s ease-out both;
+    transform-origin: 240px 85px;
+    transform-box: view-box;
+  }
+  @keyframes lp-opt-pop {
+    0%   { transform: scale(0); opacity: 0; }
+    60%  { transform: scale(1.4); opacity: 1; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+
+  /* ============== QP scene animations ============== */
+  .banner-svg.scene-1 #qp-compare {
+    animation: qp-fade-slide 0.7s ease-out forwards;
+  }
+  @keyframes qp-fade-slide {
+    0%   { transform: translate(0, 20px); opacity: 0; }
+    100% { transform: translate(0,0); opacity: 1; }
+  }
+  .banner-svg.scene-1 #qp-linear-path { stroke-dasharray: 400; stroke-dashoffset: 400; animation: qp-draw 1.1s 0.2s ease-out forwards; }
+  .banner-svg.scene-1 #qp-quad-path   { stroke-dasharray: 400; stroke-dashoffset: 400; animation: qp-draw 1.4s 0.5s ease-out forwards; }
+  @keyframes qp-draw { 0% { stroke-dashoffset: 400; } 100% { stroke-dashoffset: 0; } }
+
+  .banner-svg.scene-2 #qp-target,
+  .banner-svg.scene-3 #qp-target,
+  .banner-svg.scene-4 #qp-target,
+  .banner-svg.scene-5 #qp-target {
+    transform-box: fill-box;
+  }
+  .banner-svg.scene-2 #qp-target-ripple,
+  .banner-svg.scene-3 #qp-target-ripple,
+  .banner-svg.scene-4 #qp-target-ripple,
+  .banner-svg.scene-5 #qp-target-ripple {
+    animation: qp-ripple 1.6s ease-out infinite;
+    transform-origin: center;
+    transform-box: fill-box;
+  }
+  @keyframes qp-ripple {
+    0%   { transform: scale(0.6); opacity: 0.8; }
+    100% { transform: scale(2.2); opacity: 0; }
+  }
+  .banner-svg.scene-3 .qp-ellipse-anim {
+    animation: qp-shrink 3s linear infinite;
+    transform-origin: 270px 115px;
+    transform-box: view-box;
+  }
+  .banner-svg.scene-3 .qp-ellipse-anim:nth-child(1) { animation-delay: 0.0s; }
+  .banner-svg.scene-3 .qp-ellipse-anim:nth-child(2) { animation-delay: 0.6s; }
+  .banner-svg.scene-3 .qp-ellipse-anim:nth-child(3) { animation-delay: 1.2s; }
+  .banner-svg.scene-3 .qp-ellipse-anim:nth-child(4) { animation-delay: 1.8s; }
+  .banner-svg.scene-3 .qp-ellipse-anim:nth-child(5) { animation-delay: 2.4s; }
+  .banner-svg.scene-4 .qp-ellipse-static,
+  .banner-svg.scene-5 .qp-ellipse-static { opacity: 0.55; }
+  @keyframes qp-shrink {
+    0%   { transform: scale(1.2); opacity: 0; }
+    12%  { opacity: 0.7; }
+    85%  { opacity: 0.7; }
+    100% { transform: scale(0.08); opacity: 0; }
+  }
+  .banner-svg.scene-4 #qp-region {
+    animation: qp-region-in 0.7s ease-out forwards;
+    transform-origin: 210px 140px;
+    transform-box: view-box;
+  }
+  @keyframes qp-region-in {
+    0%   { transform: scale(0.55); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  .banner-svg.scene-5 #qp-projection {
+    stroke-dasharray: 200;
+    stroke-dashoffset: 200;
+    animation: qp-draw-proj 0.9s 0.3s ease-out forwards;
+  }
+  @keyframes qp-draw-proj { 0% { stroke-dashoffset: 200; } 100% { stroke-dashoffset: 0; } }
+  .banner-svg.scene-5 #qp-optimum {
+    animation: qp-opt-pop 0.5s 1.1s ease-out both;
+    transform-origin: 328px 97px;
+    transform-box: view-box;
+  }
+  @keyframes qp-opt-pop {
+    0%   { transform: scale(0); opacity: 0; }
+    60%  { transform: scale(1.4); opacity: 1; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+
+  @media (max-width: 900px) {
+    .panel.active { grid-template-columns: 1fr; }
+    aside.toc { position: static; }
+    .interactive-body { grid-template-columns: 1fr; }
+    main { padding: 20px; }
+    header.lecture-head, nav.main-tabs { padding-left: 20px; padding-right: 20px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="lecture-head">
+  <h1>Optimization in Two Flavors</h1>
+  <p class="subtitle">Linear & Quadratic Programming</p>
+  <div class="meta">Algorithm II · Dr. Arash Kermani · CUD Spring 2026</div>
+</header>
+
+<nav class="main-tabs">
+  <button class="tab active" data-tab="lp">1 · Linear Programming</button>
+  <button class="tab" data-tab="qp">2 · Quadratic Programming</button>
+</nav>
+
+<main>
+
+<!-- =========================== LP PANEL =========================== -->
+<section class="panel active" id="panel-lp">
+
+  <aside class="toc" data-scope="lp">
+    <h3>In this tab</h3>
+    <ol>
+      <li><a href="#lp-intro">What is LP?</a></li>
+      <li><a href="#lp-anatomy">Anatomy of an LP</a></li>
+      <li><a href="#lp-example">A factory, in numbers</a></li>
+      <li><a href="#lp-geometry">Geometry: polytope & level lines</a></li>
+      <li><a href="#lp-simplex">How solvers find the answer</a></li>
+      <li><a href="#lp-apps">Where LP shows up</a></li>
+      <li><a href="#lp-takeaways">Takeaways</a></li>
+    </ol>
+  </aside>
+
+  <article>
+
+    <div class="topic-banner" id="lp-banner">
+      <svg class="banner-svg" viewBox="0 0 500 265" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Linear programming animated explainer">
+        <defs>
+          <clipPath id="lp-clip"><rect x="20" y="32" width="460" height="208" rx="4"/></clipPath>
+          <marker id="lp-arr" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+            <path d="M0,0 L8,4 L0,8 Z" fill="#2f855a"/>
+          </marker>
+        </defs>
+
+        <rect x="20" y="32" width="460" height="208" rx="4" fill="none" stroke="#e4e2dc"/>
+        <text x="30" y="22" fill="#2b6cb0" font-size="11" font-weight="600" letter-spacing="0.8" font-family="system-ui, sans-serif">LINEAR PROGRAMMING · how it works</text>
+
+        <!-- Axes + labels: OUTSIDE clip so labels never get cut -->
+        <g data-scenes="1,2,3,4,5">
+          <line x1="60" y1="205" x2="460" y2="205" stroke="#bbb" stroke-width="1"/>
+          <line x1="60" y1="205" x2="60" y2="55" stroke="#bbb" stroke-width="1"/>
+          <polygon points="460,205 452,202 452,208" fill="#bbb"/>
+          <polygon points="60,55 57,63 63,63" fill="#bbb"/>
+          <text x="453" y="224" font-size="11" fill="#888" font-family="system-ui, sans-serif">x₁</text>
+          <text x="46" y="58" font-size="11" fill="#888" font-family="system-ui, sans-serif">x₂</text>
+        </g>
+
+        <g clip-path="url(#lp-clip)">
+
+          <!-- Scene 1: wandering decision point -->
+          <g id="lp-decision-pt" data-scenes="1">
+            <circle cx="0" cy="0" r="6" fill="#2b6cb0" stroke="#fff" stroke-width="1.5"/>
+            <text x="10" y="-10" fill="#2b6cb0" font-size="11" font-weight="600" font-family="system-ui, sans-serif">(x₁, x₂)</text>
+          </g>
+
+          <!-- Scene 2: infeasible shaded area for constraint 1 -->
+          <g data-scenes="2">
+            <polygon points="60,55 60,115 240,85 460,45 460,55" fill="#c53030" opacity="0.10"/>
+            <rect x="265" y="63" width="70" height="16" fill="#fdfcf8" opacity="0.88" rx="2"/>
+            <text x="300" y="75" fill="#c53030" font-size="10" font-family="system-ui, sans-serif" text-anchor="middle" font-weight="500">not allowed</text>
+          </g>
+
+          <!-- Constraint line 1 (scenes 2–5) -->
+          <g id="lp-c1" data-scenes="2,3,4,5">
+            <line x1="40" y1="118.3" x2="465" y2="44" stroke="#c53030" stroke-width="1.8"/>
+            <rect x="90" y="126" width="92" height="16" fill="#fdfcf8" opacity="0.92" rx="2"/>
+            <text x="136" y="138" fill="#c53030" font-size="10" font-family="system-ui, sans-serif" text-anchor="middle">x₁ + 3x₂ ≤ 12</text>
+          </g>
+
+          <!-- Constraint line 2 (scenes 3–5) -->
+          <g id="lp-c2" data-scenes="3,4,5">
+            <line x1="155" y1="3" x2="400" y2="228" stroke="#b7791f" stroke-width="1.8"/>
+            <rect x="312" y="142" width="84" height="16" fill="#fdfcf8" opacity="0.92" rx="2"/>
+            <text x="354" y="154" fill="#b7791f" font-size="10" font-family="system-ui, sans-serif" text-anchor="middle">2x₁ + x₂ ≤ 8</text>
+          </g>
+
+          <!-- Feasible polygon (scenes 3–5) -->
+          <polygon id="lp-region" data-scenes="3,4,5" points="60,205 60,115 240,85 380,205" fill="rgba(43,108,176,0.18)" stroke="#2b6cb0" stroke-width="1.5"/>
+          <text data-scenes="3,4,5" x="165" y="175" fill="#2b6cb0" font-size="11" font-family="system-ui, sans-serif" font-style="italic">feasible region</text>
+
+          <!-- Objective level lines (scenes 4–5): parallel, slope +0.75 in SVG -->
+          <!-- Objective ≈ 0.75·x₁ + x₂ (max); perpendicular to these lines points toward V3 -->
+          <g id="lp-level-lines" data-scenes="4,5" stroke="#2f855a" stroke-width="1" stroke-dasharray="3,4">
+            <line x1="-60" y1="-140" x2="540" y2="310"/>
+            <line x1="-60" y1="-75"  x2="540" y2="375"/>
+            <line x1="-60" y1="-10"  x2="540" y2="440"/>
+            <line x1="-60" y1="55"   x2="540" y2="505"/>
+            <line x1="-60" y1="120"  x2="540" y2="570"/>
+          </g>
+
+          <!-- Gradient direction arrow (scenes 4–5): perpendicular to level lines,
+               pointing toward the V3 optimum (direction ≈ (0.6, -0.8)) -->
+          <g data-scenes="4,5">
+            <line x1="340" y1="180" x2="388" y2="116" stroke="#2f855a" stroke-width="2" marker-end="url(#lp-arr)"/>
+            <rect x="368" y="92" width="62" height="16" fill="#fdfcf8" opacity="0.9" rx="2"/>
+            <text x="399" y="104" fill="#2f855a" font-size="10" font-weight="600" font-family="system-ui, sans-serif" text-anchor="middle">better →</text>
+          </g>
+
+          <!-- Scene 5: sweeping objective line — same slope as level lines,
+               animates from below the polygon up-right until it grazes V3 -->
+          <g id="lp-sweep" data-scenes="5">
+            <line x1="-60" y1="-140" x2="540" y2="310" stroke="#2f855a" stroke-width="2.8" stroke-linecap="round"/>
+          </g>
+
+          <!-- Scene 5: optimal vertex callout -->
+          <g id="lp-optimum" data-scenes="5">
+            <circle cx="240" cy="85" r="7" fill="#2f855a" stroke="#fff" stroke-width="1.8"/>
+            <circle cx="240" cy="85" r="13" fill="none" stroke="#2f855a" stroke-width="1.2" opacity="0.5">
+              <animate attributeName="r" values="9;16;9" dur="1.2s" repeatCount="indefinite"/>
+              <animate attributeName="opacity" values="0.6;0;0.6" dur="1.2s" repeatCount="indefinite"/>
+            </circle>
+            <rect x="252" y="62" width="70" height="16" fill="#fdfcf8" opacity="0.92" rx="2"/>
+            <text x="287" y="74" fill="#2f855a" font-size="11" font-weight="600" font-family="system-ui, sans-serif" text-anchor="middle">optimum!</text>
+          </g>
+        </g>
+      </svg>
+      <div class="banner-body">
+        <p class="caption"></p>
+        <div class="banner-controls">
+          <button class="banner-play" aria-label="Play / pause">⏸</button>
+          <span>Tap a dot to jump</span>
+          <div class="scene-dots"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="diagram-explain">
+      <h5>What the pieces in the banner mean</h5>
+      <p>
+        <strong>The dashed green lines</strong> are <em>iso-value</em> lines (also called <em>level lines</em> or <em>level sets</em>). Every point that lies on a single dashed line gives the exact same total value of the objective — the same profit, the same cost, the same score, whatever quantity you are optimizing. Parallel dashed lines just mean different total values; moving from one line to the next changes the objective by a fixed amount.
+      </p>
+      <p>
+        <strong>The green "better →" arrow</strong> points in the direction that <em>increases</em> the objective, and it is always perpendicular to the level lines. If your goal is to <em>maximize</em> profit, then "better" literally means more profit per unit step in that direction. (If the problem were a <em>minimize</em> — say, cost — the arrow would flip around: "better" would point toward lower cost.) The bold green sweep line in the animation moves in this direction; it keeps going until it just barely touches the polygon and cannot advance any further while staying inside. That last-touched point is the optimum.
+      </p>
+      <p>
+        So the arrow is there to answer the question "which way is better?" — without it, you could not tell whether the dashed lines are showing profit going up or going down.
+      </p>
+    </div>
+
+    <section id="lp-intro">
+      <h2>1 · What is Linear Programming?</h2>
+      <p class="lead">
+        Linear programming (LP) is the art of making the <em>best</em> decision
+        when everything — the goal you care about, and the rules you must obey — is
+        <strong>linear</strong> in the quantities you control.
+      </p>
+      <p>
+        "Linear" here is the entire story. If doubling an input doubles the output,
+        and two combined choices add up the way you'd expect, you are in LP territory.
+        That covers an astonishing amount of real-world planning: what to produce,
+        what to ship, what to schedule, what to blend.
+      </p>
+      <div class="key-idea">
+        <strong>Key idea.</strong> Choose numbers <span class="math">x<span class="sub">1</span>, x<span class="sub">2</span>, …</span>
+        to <em>maximize</em> or <em>minimize</em> a linear combination of them,
+        subject to linear inequality constraints. That's all an LP is.
+      </div>
+      <p>
+        The whole field exists because this special shape of problem — linear in, linear out —
+        can be solved very fast, even when there are millions of variables. Every operations
+        research textbook starts here for that reason.
+      </p>
+    </section>
+
+    <section id="lp-anatomy">
+      <h2>2 · Anatomy of an LP</h2>
+      <p>Every LP has three parts:</p>
+      <ol>
+        <li><strong>Decision variables</strong> — the knobs you control (how many chairs to make, how much to ship on each route).</li>
+        <li><strong>Objective</strong> — one linear function of those variables you want to make as large or as small as possible.</li>
+        <li><strong>Constraints</strong> — linear inequalities the variables must satisfy (budgets, capacities, minimums).</li>
+      </ol>
+      <p>In symbols, a standard LP looks like this:</p>
+      <div class="eq-block">
+        maximize &nbsp;&nbsp; c<span class="sub">1</span>·x<span class="sub">1</span> + c<span class="sub">2</span>·x<span class="sub">2</span> + … + c<span class="sub">n</span>·x<span class="sub">n</span><br>
+        subject to &nbsp; a<span class="sub">i1</span>·x<span class="sub">1</span> + a<span class="sub">i2</span>·x<span class="sub">2</span> + … + a<span class="sub">in</span>·x<span class="sub">n</span> &nbsp;≤&nbsp; b<span class="sub">i</span>&nbsp;&nbsp; for every constraint i<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; x<span class="sub">j</span> ≥ 0 &nbsp;&nbsp; (usually)
+      </div>
+      <p class="aside-note">
+        The last line — variables being non-negative — is a convention rather than
+        a requirement. "You can't ship −5 units" makes that constraint natural.
+      </p>
+    </section>
+
+    <section id="lp-example">
+      <h2>3 · A factory, in numbers</h2>
+      <p>
+        A small workshop makes two products: <strong>chairs</strong> and <strong>tables</strong>.
+        Each uses wood and labor; each sells for a profit.
+      </p>
+      <div class="two-col">
+        <div class="card">
+          <h5>Resources per item</h5>
+          <p style="font-size:14px; margin-bottom:4px;">Chair: 1 wood, 2 hours labor</p>
+          <p style="font-size:14px; margin-bottom:0;">Table: 3 wood, 2 hours labor</p>
+        </div>
+        <div class="card">
+          <h5>This week's supply</h5>
+          <p style="font-size:14px; margin-bottom:0;" id="supply-readout">12 wood, 16 labor hours</p>
+        </div>
+      </div>
+      <p>
+        Play with the sliders below. The plot shows which production plans are
+        <em>possible</em> (the shaded region), and the animated lines sweep through
+        <em>equal-profit</em> combinations. The corner where the last line leaves the
+        region is the best you can do.
+      </p>
+
+      <div class="diagram-explain">
+        <h5>How to read the factory plot</h5>
+        <p>
+          <strong>The axes are real quantities.</strong> Horizontal = <em>chairs</em> you decide to make; vertical = <em>tables</em>. Every point in the first quadrant is one specific production plan — "make 5 chairs and 3 tables" sits at <em class="val">(5, 3)</em>.
+        </p>
+        <p>
+          The plot shows <strong>three different families of lines</strong>, and they mean different things. Colors are your friend here:
+        </p>
+        <ul>
+          <li>
+            <strong style="color:var(--accent-lp)">Dashed blue line — the wood limit.</strong> Each chair uses 1 unit of wood, each table uses 3. With <em class="val">W</em> wood available, a plan must satisfy <em class="val">1·chairs + 3·tables ≤ W</em>. Endpoints: <em class="val">(W, 0)</em> on the chairs axis and <em class="val">(0, W/3)</em> on the tables axis. These are <em>not</em> at equal values, because each product consumes a different amount of wood.
+          </li>
+          <li>
+            <strong style="color:var(--warn)">Dashed orange line — the labor limit.</strong> Each chair uses 2 hours, each table uses 2 hours — <em>equal</em> rates. With <em class="val">H</em> hours the rule is <em class="val">2·chairs + 2·tables ≤ H</em>, so both intercepts sit at <em class="val">H/2</em>. Slide Labor Hours from 16 up to 19 and the endpoints move from <em class="val">(8, 0)</em> and <em class="val">(0, 8)</em> to <em class="val">(9.5, 0)</em> and <em class="val">(0, 9.5)</em> — the whole line slides outward symmetrically.
+          </li>
+          <li>
+            <strong style="color:var(--good)">Solid green line — the profit line (not a constraint!).</strong> It is a <em>level set</em> of the objective: every plan on this line earns the same total profit <em class="val">40·chairs + 50·tables</em>. Its slope is <em>−(profit per chair) / (profit per table)</em>, which is generally not symmetric — so its x-intercept and y-intercept are different numbers (in the screenshot: x ≈ 8.5, y ≈ 6.8). That is not a paradox; the green line is the <em>objective</em>, not the labor constraint. The animation sweeps this line outward until it last touches the polygon — that touch point is the optimum.
+          </li>
+        </ul>
+        <p>
+          <strong>The shaded polygon</strong> is the intersection of every rule: enough wood <em>and</em> enough labor <em>and</em> non-negative chairs <em>and</em> non-negative tables. Change any slider → the polygon reshapes → the optimal corner (green dot) may jump.
+        </p>
+      </div>
+
+      <div class="interactive">
+        <div class="interactive-header">
+          <h4>Interactive · Factory production</h4>
+          <span class="tag">Drag · Play</span>
+        </div>
+        <div class="interactive-body">
+          <div class="plot-wrap">
+            <canvas class="plot" id="plot-factory"></canvas>
+          </div>
+          <div class="controls" id="ctrl-factory">
+            <div class="ctrl">
+              <label>Profit per chair <span class="val" id="v-pc">40</span></label>
+              <input type="range" id="s-pc" min="10" max="100" step="1" value="40">
+            </div>
+            <div class="ctrl">
+              <label>Profit per table <span class="val" id="v-pt">50</span></label>
+              <input type="range" id="s-pt" min="10" max="100" step="1" value="50">
+            </div>
+            <div class="ctrl">
+              <label>Wood available <span class="val" id="v-wood">12</span></label>
+              <input type="range" id="s-wood" min="4" max="24" step="1" value="12">
+            </div>
+            <div class="ctrl">
+              <label>Labor hours <span class="val" id="v-lab">16</span></label>
+              <input type="range" id="s-lab" min="4" max="30" step="1" value="16">
+            </div>
+            <button id="b-sweep">▶ Sweep profit line</button>
+            <button class="secondary" id="b-reset-fact">Reset</button>
+            <div class="readout" id="ro-factory"></div>
+            <div class="legend">
+              <span><span class="sw" style="background:#dbeafe;border:1px solid #2b6cb0;"></span>Feasible plans</span>
+              <span><span class="sw" style="background:#2f855a;"></span>Optimal corner</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <p>
+        Notice two things as you drag the sliders: the feasible region reshapes smoothly, and the
+        optimal corner <em>jumps</em> from one vertex to another when the profit ratio crosses a
+        threshold. That jumpiness is a real feature of LP, not a glitch.
+      </p>
+    </section>
+
+    <section id="lp-geometry">
+      <h2>4 · Geometry: polytope and level lines</h2>
+      <p>
+        Every LP has the same geometric picture, regardless of the story on top:
+      </p>
+      <ul class="examples">
+        <li>The constraints carve out a <strong>feasible region</strong>: a polygon in 2D, a polyhedron in higher dimensions. It always has flat faces and sharp corners.</li>
+        <li>The objective is a <strong>linear function</strong>, whose level sets are parallel lines (in 2D), parallel planes (in 3D), parallel hyperplanes in general.</li>
+        <li>Optimizing means <em>pushing the level line as far as possible in the good direction</em> while staying inside the region.</li>
+      </ul>
+      <div class="key-idea">
+        <strong>The corner theorem.</strong> If an LP has a finite optimum, at least one
+        optimal point sits at a <em>corner</em> (vertex) of the feasible region. This is
+        why LP algorithms search corners, not interiors.
+      </div>
+      <p>
+        The intuition is simple: a straight ramp leans against a flat-sided box. The highest
+        point you can touch on the ramp is a corner of the box. The only exception is when
+        the ramp is exactly parallel to one face — then a whole edge ties for first place,
+        but a corner is still among the winners.
+      </p>
+    </section>
+
+    <section id="lp-simplex">
+      <h2>5 · How solvers find the answer</h2>
+      <p>
+        Since the optimum lives at a corner, a solver only has to hunt among corners. The
+        <strong>Simplex method</strong>, invented by George Dantzig in 1947, does exactly
+        that: start at any corner, walk to an adjacent corner that improves the objective,
+        repeat until no neighbor is better.
+      </p>
+      <p>
+        Press <em>Step</em> below to watch the walk. The green vertex is the current best;
+        arrows show which neighbors are being considered.
+      </p>
+
+      <div class="interactive">
+        <div class="interactive-header">
+          <h4>Interactive · Simplex vertex walk</h4>
+          <span class="tag">Animation</span>
+        </div>
+        <div class="interactive-body">
+          <div class="plot-wrap">
+            <canvas class="plot" id="plot-simplex"></canvas>
+          </div>
+          <div class="controls" id="ctrl-simplex">
+            <p style="font-size:13px;color:var(--ink-soft);margin-top:0;">
+              Pentagon-shaped feasible region, objective <span class="math">3x + 2y</span>.
+              Watch Simplex walk from an arbitrary starting corner to the optimum.
+            </p>
+            <button id="b-simplex-step">Step ▶</button>
+            <button id="b-simplex-auto">Auto-play</button>
+            <button class="secondary" id="b-simplex-reset">Reset</button>
+            <div class="readout" id="ro-simplex"></div>
+          </div>
+        </div>
+      </div>
+
+      <p class="aside-note">
+        In practice, modern LP solvers also use <em>interior-point</em> methods, which
+        cut through the inside of the polytope instead of walking its corners. For
+        gigantic problems they are sometimes faster. Both families are taught together
+        in a dedicated optimization course; for us today, the corner intuition is enough.
+      </p>
+    </section>
+
+    <section id="lp-apps">
+      <h2>6 · Where LP shows up</h2>
+      <p>A tiny sample of the things LP is quietly running:</p>
+      <ul class="examples">
+        <li><strong>Airline crew scheduling</strong> — assign pilots and flight attendants to flights, minimizing cost while meeting rest, qualification, and home-base rules.</li>
+        <li><strong>Supply chain planning</strong> — decide how much of each product to make at each factory and ship through which warehouse to which region.</li>
+        <li><strong>Portfolio construction</strong> (linear version) — maximize expected return subject to a total-weight budget and per-asset caps.</li>
+        <li><strong>Network flow & routing</strong> — push as much data, oil, or electricity through a network as its pipe capacities allow.</li>
+        <li><strong>Diet & blending</strong> — the original 1940s application: cheapest mix of foods meeting nutritional requirements.</li>
+      </ul>
+      <p>
+        The unifying pattern: a goal that adds up linearly, constraints that are "no more than X"
+        or "at least Y", and variables that can be any non-negative amount. If your problem
+        fits that shape, you have a linear program.
+      </p>
+    </section>
+
+    <section id="lp-takeaways">
+      <h2>7 · Takeaways</h2>
+      <ul class="examples">
+        <li>An LP is: linear objective + linear inequality constraints + usually non-negative variables.</li>
+        <li>The feasible set is a polytope — flat faces, sharp corners.</li>
+        <li>The optimum, if finite, sits at a corner. Solvers exploit this.</li>
+        <li>Simplex walks corner-to-corner. Interior-point methods cut through the middle. Both work well.</li>
+        <li>LP is the workhorse of operational planning. Recognizing when a problem <em>is</em> an LP is the hard part — the solving is done for you.</li>
+      </ul>
+      <p style="margin-top:24px;color:var(--ink-soft);">→ Next tab: what changes when the objective has a <em>curve</em>.</p>
+    </section>
+
+  </article>
+</section>
+
+<!-- =========================== QP PANEL =========================== -->
+<section class="panel" id="panel-qp">
+
+  <aside class="toc" data-scope="qp">
+    <h3>In this tab</h3>
+    <ol>
+      <li><a href="#qp-intro">Beyond linear costs</a></li>
+      <li><a href="#qp-anatomy">Anatomy of a QP</a></li>
+      <li><a href="#qp-toggle">Same region, different objective</a></li>
+      <li><a href="#qp-examples">Four real QPs</a></li>
+      <li><a href="#qp-solvers">How QPs are solved</a></li>
+      <li><a href="#qp-lp-vs-qp">LP vs QP at a glance</a></li>
+      <li><a href="#qp-takeaways">Takeaways</a></li>
+    </ol>
+  </aside>
+
+  <article>
+
+    <div class="topic-banner" id="qp-banner">
+      <svg class="banner-svg" viewBox="0 0 500 265" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Quadratic programming animated explainer">
+        <defs>
+          <clipPath id="qp-clip"><rect x="20" y="32" width="460" height="208" rx="4"/></clipPath>
+        </defs>
+
+        <rect x="20" y="32" width="460" height="208" rx="4" fill="none" stroke="#e4e2dc"/>
+        <text x="30" y="22" fill="#6b46c1" font-size="11" font-weight="600" letter-spacing="0.8" font-family="system-ui, sans-serif">QUADRATIC PROGRAMMING · how it works</text>
+
+        <!-- Axes + labels for scenes 2-5: OUTSIDE clip so labels never get cut -->
+        <g data-scenes="2,3,4,5">
+          <line x1="60" y1="205" x2="460" y2="205" stroke="#bbb" stroke-width="1"/>
+          <line x1="60" y1="205" x2="60" y2="55" stroke="#bbb" stroke-width="1"/>
+          <polygon points="460,205 452,202 452,208" fill="#bbb"/>
+          <polygon points="60,55 57,63 63,63" fill="#bbb"/>
+          <text x="453" y="224" font-size="11" fill="#888" font-family="system-ui, sans-serif">x₁</text>
+          <text x="46" y="58" font-size="11" fill="#888" font-family="system-ui, sans-serif">x₂</text>
+        </g>
+
+        <g clip-path="url(#qp-clip)">
+
+          <!-- Scene 1: cost function comparison (1D graph) -->
+          <g id="qp-compare" data-scenes="1">
+            <!-- mini axes -->
+            <line x1="120" y1="200" x2="380" y2="200" stroke="#aaa" stroke-width="1"/>
+            <line x1="250" y1="200" x2="250" y2="65" stroke="#aaa" stroke-width="1"/>
+            <polygon points="380,200 372,197 372,203" fill="#aaa"/>
+            <polygon points="250,65 247,73 253,73" fill="#aaa"/>
+            <text x="385" y="205" font-size="10" fill="#888" font-family="system-ui, sans-serif">deviation d</text>
+            <text x="245" y="60" font-size="10" fill="#888" font-family="system-ui, sans-serif" text-anchor="end">cost</text>
+
+            <!-- linear: V shape -->
+            <path id="qp-linear-path" d="M 130 130 L 250 200 L 370 130" fill="none" stroke="#c53030" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+            <text x="130" y="122" fill="#c53030" font-size="11" font-weight="600" font-family="system-ui, sans-serif">linear: cost = |d|</text>
+
+            <!-- quadratic: parabola using Bézier -->
+            <path id="qp-quad-path" d="M 145 90 Q 250 310 355 90" fill="none" stroke="#6b46c1" stroke-width="2.4" stroke-linecap="round"/>
+            <text x="285" y="90" fill="#6b46c1" font-size="11" font-weight="600" font-family="system-ui, sans-serif">quadratic: cost = d²</text>
+
+            <!-- a reference deviation value with both costs marked -->
+            <line x1="330" y1="200" x2="330" y2="110" stroke="#888" stroke-width="1" stroke-dasharray="2,3"/>
+            <circle cx="330" cy="152" r="4" fill="#c53030"/>
+            <circle cx="330" cy="110" r="4" fill="#6b46c1"/>
+            <text x="338" y="185" font-size="10" fill="#666" font-family="system-ui, sans-serif">same deviation</text>
+            <text x="338" y="157" font-size="10" fill="#c53030" font-family="system-ui, sans-serif">small penalty</text>
+            <text x="338" y="105" font-size="10" fill="#6b46c1" font-weight="600" font-family="system-ui, sans-serif">big penalty</text>
+          </g>
+
+          <!-- Target point (scenes 2-5) -->
+          <g id="qp-target" data-scenes="2,3,4,5">
+            <circle id="qp-target-ripple" cx="270" cy="115" r="10" fill="none" stroke="#c53030" stroke-width="1.4"/>
+            <circle cx="270" cy="115" r="5.5" fill="#c53030" stroke="#fff" stroke-width="1.5"/>
+            <rect x="280" y="101" width="78" height="16" fill="#fdfcf8" opacity="0.92" rx="2"/>
+            <text x="319" y="113" fill="#c53030" font-size="10" font-weight="600" font-family="system-ui, sans-serif" text-anchor="middle">ideal (target)</text>
+          </g>
+
+          <!-- Scene 2: first hint of a bowl — two starter ellipses -->
+          <g data-scenes="2" stroke="#6b46c1" fill="none" stroke-width="1.3" stroke-dasharray="4,3" opacity="0.55">
+            <ellipse cx="270" cy="115" rx="45" ry="30"/>
+            <ellipse cx="270" cy="115" rx="85" ry="55"/>
+          </g>
+          <g data-scenes="2">
+            <rect x="150" y="175" width="128" height="16" fill="#fdfcf8" opacity="0.92" rx="2"/>
+            <text x="214" y="187" fill="#6b46c1" font-size="10" font-family="system-ui, sans-serif" font-style="italic" text-anchor="middle">cost grows outward</text>
+          </g>
+
+          <!-- Scene 3: animated contracting wave of ellipses -->
+          <g id="qp-wave" data-scenes="3" stroke="#6b46c1" fill="none" stroke-width="1.3" stroke-dasharray="4,3">
+            <ellipse class="qp-ellipse-anim" cx="270" cy="115" rx="120" ry="80"/>
+            <ellipse class="qp-ellipse-anim" cx="270" cy="115" rx="120" ry="80"/>
+            <ellipse class="qp-ellipse-anim" cx="270" cy="115" rx="120" ry="80"/>
+            <ellipse class="qp-ellipse-anim" cx="270" cy="115" rx="120" ry="80"/>
+            <ellipse class="qp-ellipse-anim" cx="270" cy="115" rx="120" ry="80"/>
+          </g>
+          <g data-scenes="3">
+            <rect x="120" y="175" width="188" height="16" fill="#fdfcf8" opacity="0.92" rx="2"/>
+            <text x="214" y="187" fill="#6b46c1" font-size="10" font-family="system-ui, sans-serif" font-style="italic" text-anchor="middle">equal-cost curves = ellipses</text>
+          </g>
+
+          <!-- Scenes 4-5: static ellipses (the bowl, frozen) -->
+          <g data-scenes="4,5" class="qp-ellipse-static" stroke="#6b46c1" fill="none" stroke-width="1" stroke-dasharray="4,3">
+            <ellipse cx="270" cy="115" rx="30" ry="20"/>
+            <ellipse cx="270" cy="115" rx="60" ry="40"/>
+            <ellipse cx="270" cy="115" rx="90" ry="60"/>
+            <ellipse cx="270" cy="115" rx="120" ry="80"/>
+          </g>
+
+          <!-- Scene 4-5: feasible polygon -->
+          <polygon id="qp-region" data-scenes="4,5" points="70,205 90,100 230,65 345,110 320,205" fill="rgba(107,70,193,0.14)" stroke="#6b46c1" stroke-width="1.6"/>
+          <g data-scenes="4,5">
+            <rect x="115" y="172" width="92" height="16" fill="#fdfcf8" opacity="0.85" rx="2"/>
+            <text x="161" y="184" fill="#6b46c1" font-size="11" font-family="system-ui, sans-serif" font-style="italic" text-anchor="middle">feasible region</text>
+          </g>
+
+          <!-- Scene 5: projection from target to optimum on boundary -->
+          <line id="qp-projection" data-scenes="5" x1="270" y1="115" x2="328" y2="97" stroke="#888" stroke-width="1.2" stroke-dasharray="3,3"/>
+
+          <!-- Scene 5: optimum -->
+          <g id="qp-optimum" data-scenes="5">
+            <circle cx="328" cy="97" r="7" fill="#2f855a" stroke="#fff" stroke-width="1.8"/>
+            <circle cx="328" cy="97" r="12" fill="none" stroke="#2f855a" stroke-width="1.2" opacity="0.5">
+              <animate attributeName="r" values="9;15;9" dur="1.2s" repeatCount="indefinite"/>
+              <animate attributeName="opacity" values="0.6;0;0.6" dur="1.2s" repeatCount="indefinite"/>
+            </circle>
+            <rect x="340" y="78" width="122" height="16" fill="#fdfcf8" opacity="0.92" rx="2"/>
+            <text x="401" y="90" fill="#2f855a" font-size="11" font-weight="600" font-family="system-ui, sans-serif" text-anchor="middle">closest feasible point</text>
+          </g>
+        </g>
+      </svg>
+      <div class="banner-body">
+        <p class="caption"></p>
+        <div class="banner-controls">
+          <button class="banner-play" aria-label="Play / pause">⏸</button>
+          <span>Tap a dot to jump</span>
+          <div class="scene-dots"></div>
+        </div>
+      </div>
+    </div>
+
+    <section id="qp-intro">
+      <h2>1 · Beyond linear costs</h2>
+      <p class="lead">
+        Linear objectives are a clean starting point, but many real goals don't stay
+        linear — they <em>curve</em>. Being off-target usually hurts faster than
+        proportionally: missing by 2 is more than twice as bad as missing by 1.
+        In most real settings, mistakes are penalized not by how far off you are,
+        but by how far off you are <em>squared</em>.
+      </p>
+      <p>Three everyday settings where this "quadratic penalty" shows up naturally:</p>
+      <ul class="examples">
+        <li>
+          <strong>Tracking or control.</strong> A thermostat that is 1° off its
+          setpoint is fine; a thermostat that is 10° off is not ten times worse,
+          it is much worse than that. Comfort, energy waste, and corrective effort
+          all scale badly with big deviations, so the cost of being off is naturally
+          written as <em>(deviation)²</em> rather than <em>|deviation|</em>.
+        </li>
+        <li>
+          <strong>Financial risk.</strong> In finance, "risk" usually means
+          <em>variance</em> — how spread out the possible future outcomes are. If
+          you put twice as much money into a volatile asset (what finance people
+          call doubling your "exposure"), the variance of your final wealth
+          roughly <em>quadruples</em>, not just doubles: it grows with the
+          <em>square</em> of the amount invested. So minimizing risk is a naturally
+          quadratic objective.
+        </li>
+        <li>
+          <strong>Fitting a line to data.</strong> When you draw a best-fit line
+          through a scatter of points, each point's "error" is its vertical
+          distance from the line. The standard rule — <em>least squares</em> —
+          scores each error by its <em>square</em>, so a point that is 2 units off
+          the line counts <em>four times</em> as much as a point 1 unit off. This
+          is why drawing a straight line through noisy data is a quadratic problem.
+        </li>
+      </ul>
+
+      <div class="diagram-explain">
+        <h5>Why the power of 2 — not 1, not 3?</h5>
+        <p>
+          Fair question. There is nothing magical about the number 2, but it is
+          the sweet spot between three competing pressures:
+        </p>
+        <ul>
+          <li>
+            <strong>Power 1 (just <em>|mistake|</em>)</strong> treats every unit
+            of error equally — a mistake of 10 is exactly ten times worse than a
+            mistake of 1. It does not punish big mistakes any extra, and it has a
+            sharp kink at zero that makes smooth optimization awkward (the
+            derivative is undefined there). It is occasionally used in
+            "robust" statistics when you specifically want to tolerate outliers,
+            but it does not give you a smooth bowl.
+          </li>
+          <li>
+            <strong>Power 3 or higher</strong> punishes large mistakes enormously
+            but almost ignores small ones — usually not what real goals look like.
+            It also breaks the clean "linear gradient, constant curvature"
+            structure that makes quadratic problems solvable quickly and in closed
+            form. You lose the algorithms without gaining useful behavior.
+          </li>
+          <li>
+            <strong>Power 2 is what every smooth cost function <em>actually looks
+            like</em> near its minimum.</strong> This is the deepest reason, and
+            it comes from <em>Taylor's theorem</em>: if you zoom in on the
+            minimum of any smooth function, the linear (1st-order) term
+            vanishes — a minimum is flat — and the <em>quadratic</em> (2nd-order)
+            term is the first piece that is not zero. So "squared" is not
+            an arbitrary modeling choice: it is literally the local shape of
+            every smooth cost, no matter how complicated the cost is globally.
+          </li>
+        </ul>
+        <p>
+          On top of that intrinsic reason, power 2 plays very nicely with familiar
+          geometry — Pythagoras <em class="val">a² + b² = c²</em>, the length of a
+          vector, the definition of variance, the notion of projection onto a
+          line — all of these are sums of squares. And it keeps the math tidy:
+          the gradient of a quadratic is linear, which is exactly the
+          ingredient fast solvers need. Any other power breaks at least one of
+          these three things — natural local shape, natural geometry, natural
+          solvability — and you rarely gain anything in return.
+        </p>
+      </div>
+
+      <div class="diagram-explain">
+        <h5>So — is the squared cost nature, or our decision?</h5>
+        <p>
+          Honest answer: <strong>both</strong>, depending on which quantity you are
+          looking at. It is worth being explicit about the difference.
+        </p>
+        <ul>
+          <li>
+            <strong>It is nature</strong> when the square is forced on us by a
+            definition or a law. <em>Variance</em> has to be defined with a square
+            — remove the square and the variances of independent random things
+            stop adding up, the whole of statistics falls apart. <em>Euclidean
+            distance</em> has a square in it because of Pythagoras. <em>Kinetic
+            energy</em> ½mv² and <em>spring potential</em> ½kx² come from integrating
+            Newton's and Hooke's laws — nobody chose to square, it is what the
+            physics gives you. And most importantly, <em>near any smooth
+            minimum</em>, Taylor's theorem guarantees that the function literally
+            is quadratic, no matter how complicated the function looks globally.
+            In all these cases, there is no choosing. The square is there.
+          </li>
+          <li>
+            <strong>It is a modeling choice</strong> when you are writing down a
+            cost for fitting, tracking, penalizing, or weighting. You <em>could</em>
+            penalize a mistake by <em class="val">|mistake|</em>, or
+            <em class="val">mistake⁴</em>, or something stranger. Picking squared
+            is a decision — one made because squared is differentiable, has
+            closed-form solutions, matches the "small misses don't matter, big
+            misses do" intuition, corresponds to Gaussian-noise assumptions in
+            statistics, and — not coincidentally — matches what the function
+            locally looks like near the optimum anyway. Alternatives (L¹ for
+            robustness to outliers, Huber loss for a blend, L∞ for worst-case
+            design) exist and are sometimes preferred.
+          </li>
+        </ul>
+        <p>
+          Putting it together: <strong>near the minimum of anything smooth, power 2
+          is nature.</strong> Everywhere else — fitting, control, risk, design
+          penalties — <strong>power 2 is a choice</strong>, but a choice that lines
+          up so cleanly with the nature answer, and with the math, and with
+          solvability, that it has become the overwhelming default. The
+          <em>class</em> of problems called "quadratic programming" is the
+          human-made decision to study exactly this well-behaved family.
+        </p>
+      </div>
+
+      <p>
+        <strong>Quadratic programming (QP)</strong> keeps the linear constraints of
+        LP but allows the objective to be a quadratic function. That one change
+        unlocks a large class of problems LP cannot handle cleanly.
+      </p>
+      <div class="key-idea">
+        <strong>Key idea.</strong> A QP is an LP whose objective is allowed to curve.
+        Specifically, the objective is <span class="math">½ x<span class="sup">T</span>Qx + p<span class="sup">T</span>x</span>
+        — a quadratic bowl — and the constraints are the same linear inequalities
+        we had before.
+      </div>
+    </section>
+
+    <section id="qp-anatomy">
+      <h2>2 · Anatomy of a QP</h2>
+      <p>The textbook way to write a QP uses compact matrix notation:</p>
+      <div class="eq-block">
+        minimize &nbsp;&nbsp; ½ &middot; x<sup>T</sup> Q x &nbsp;+&nbsp; p<sup>T</sup> x<br>
+        subject to &nbsp; A x &le; b<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; x &ge; 0 &nbsp;&nbsp;(optional)
+      </div>
+
+      <div class="diagram-explain">
+        <h5>Reading the formula — what is each symbol?</h5>
+        <p>
+          That expression is terse. Before the symbols become intimidating, here is what every piece means in plain language.
+        </p>
+        <ul>
+          <li>
+            <strong>x</strong> is the list of numbers you are choosing — the decision variables. With two variables it is simply <em class="val">x = (x₁, x₂)</em>; with <em>n</em> variables, <em class="val">x = (x₁, x₂, …, xₙ)</em>. The small <em>₁</em>, <em>₂</em>, <em>ₙ</em> are <em>index labels</em>, not exponents — "the first variable," "the second variable," and so on.
+          </li>
+          <li>
+            <strong>x<sup>T</sup></strong> is read "x transpose." The small raised T is <em>not</em> a power — it does <em>not</em> mean "x to the power T." It is a linear-algebra notation that says "write the same list of numbers sideways, as a row instead of a column," so that the next matrix operation has matching dimensions. For understanding what is going on, you can simply read x<sup>T</sup> as "x, again."
+          </li>
+          <li>
+            <strong>x<sup>T</sup> Q x</strong> — three symbols side by side — is <em>not</em> ordinary multiplication of three numbers. The writing is a shorthand. With two variables it expands into the concrete sum<br>
+            <em class="val">Q₁₁·x₁² + Q₂₂·x₂² + 2·Q₁₂·x₁·x₂</em><br>
+            — the squares of each variable, plus a cross term. This sum is the curved part (the "bowl") of the cost.
+          </li>
+          <li>
+            <strong>p<sup>T</sup> x</strong> is the ordinary linear sum <em class="val">p₁·x₁ + p₂·x₂ + … + pₙ·xₙ</em> — the same linear combination you used in LP.
+          </li>
+          <li>
+            <strong>Q</strong> is a square grid of numbers — a <em>matrix</em> — that sets the <em>shape</em> of the bowl (how stretched, how tilted). <strong>p</strong> is a list of numbers that <em>tilts</em> the bowl off-centre.
+          </li>
+          <li>
+            <strong>A x &le; b</strong> is a compact way to bundle <em>every</em> constraint. Each row of the matrix A holds the coefficients of one inequality, and the matching entry of the vector b holds that inequality's right-hand limit. So one row of "A x &le; b" is exactly <em class="val">a₁·x₁ + a₂·x₂ + … &le; b</em> — the same kind of linear rule you saw in LP.
+          </li>
+          <li>
+            <strong>The "x"s sitting next to other symbols</strong> (as in <em class="val">A x</em> or <em class="val">Q x</em>) are <em>not</em> multiplications of two numbers. They are <em>matrix–vector products</em> — a bookkeeping operation that amounts to "multiply each row of the matrix element-by-element with x, and add." With actual numbers, it collapses to ordinary addition and multiplication, as you will see below.
+          </li>
+        </ul>
+      </div>
+
+      <p>So if you have only <strong>two variables</strong>, that compact formula becomes this very concrete statement:</p>
+      <div class="eq-block">
+        minimize &nbsp;&nbsp; ½ &middot; (Q₁₁·x₁² + Q₂₂·x₂² + 2·Q₁₂·x₁·x₂) &nbsp;+&nbsp; p₁·x₁ + p₂·x₂<br>
+        subject to &nbsp; a₁·x₁ + a₂·x₂ &le; b &nbsp;&nbsp;(one such line per constraint)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; x₁, x₂ &ge; 0 &nbsp;(if required)
+      </div>
+      <p>
+        Nothing mysterious: a polygon of allowed points (the linear inequalities), and an objective built from squared terms, a cross-term, and linear terms. The matrix notation above is just a way to write this same thing for any number of variables without running out of space.
+      </p>
+
+      <p>
+        Back to the matrix picture: the matrix <strong>Q</strong> controls the bowl's shape via its <em>eigenvalues</em>. When every eigenvalue is non-negative (<em>positive semi-definite</em>), the bowl opens upward and the QP is <strong>convex</strong> — easy to solve, one clear minimum. We will only consider convex QPs in this lecture.
+      </p>
+      <p class="aside-note">
+        Non-convex QPs (some negative eigenvalues → saddle-shaped objective) also exist and are much harder. They do not appear in most engineering applications and we will set them aside.
+      </p>
+    </section>
+
+    <section id="qp-toggle">
+      <h2>3 · Same region, different objective</h2>
+      <p>
+        This is the single most useful picture for understanding the LP→QP jump. The
+        feasible region <em>does not change</em> — it is still a polygon defined by
+        linear inequalities. What changes is the shape of the level sets of the
+        objective you are optimizing.
+      </p>
+      <ul class="examples">
+        <li><strong>LP:</strong> level sets are <em>straight lines</em>, the optimum sits at a <em>corner</em>.</li>
+        <li><strong>QP:</strong> level sets are <em>ellipses</em>, the optimum can sit <em>anywhere</em> — inside the region, on an edge, or at a corner.</li>
+      </ul>
+      <p>
+        In the interactive below you are driving a single optimization problem.
+        Toggle between LP and QP to see how the <em>same</em> polygon produces a
+        different optimum — and drag the red dot to change where the bowl
+        (or the objective vector) is centered.
+      </p>
+
+      <div class="interactive">
+        <div class="interactive-header">
+          <h4>Interactive · Flagship: LP vs QP on the same region</h4>
+          <span class="tag">Drag · Toggle</span>
+        </div>
+        <div class="interactive-body">
+          <div class="plot-wrap">
+            <canvas class="plot" id="plot-toggle"></canvas>
+          </div>
+          <div class="controls" id="ctrl-toggle">
+            <div class="toggle-row" id="toggle-mode">
+              <button class="active" data-mode="lp">LP — lines</button>
+              <button data-mode="qp">QP — ellipses</button>
+            </div>
+            <p style="font-size:13px;color:var(--ink-soft);">
+              Drag the <strong style="color:#c53030">red target</strong> to move the
+              unconstrained optimum. The <strong style="color:#2f855a">green dot</strong>
+              is the best feasible solution.
+            </p>
+            <div class="ctrl" id="ctrl-qp-shape">
+              <label>Bowl aspect <span class="val" id="v-aspect">0.6</span></label>
+              <input type="range" id="s-aspect" min="0.3" max="3" step="0.1" value="0.6">
+            </div>
+            <div class="ctrl" id="ctrl-qp-tilt">
+              <label>Bowl tilt <span class="val" id="v-tilt">0°</span></label>
+              <input type="range" id="s-tilt" min="-60" max="60" step="1" value="0">
+              <p style="font-size:11px;color:var(--ink-faint);margin:4px 0 0;line-height:1.4;">
+                Tilt only has a visible effect when <em>aspect ≠ 1</em> — a perfect
+                circle looks the same at every angle.
+              </p>
+            </div>
+            <div class="readout" id="ro-toggle"></div>
+            <div class="legend">
+              <span><span class="sw" style="background:#e9d8fd;border:1px solid #6b46c1;"></span>Feasible</span>
+              <span><span class="sw" style="background:#c53030;border-radius:50%;"></span>Target</span>
+              <span><span class="sw" style="background:#2f855a;border-radius:50%;"></span>Optimum</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <p>
+        Notice how, in QP mode, when the target drops <em>inside</em> the polygon the
+        optimum sits right on it — no constraint is binding. In LP mode the optimum
+        is always pinned to a corner, no matter where the target vector points.
+        That is the entire conceptual difference between the two, made visible.
+      </p>
+    </section>
+
+    <section id="qp-examples">
+      <h2>4 · Four real QPs</h2>
+
+      <div class="two-col">
+        <div class="card">
+          <h5>Markowitz portfolio</h5>
+          <p style="font-size:14px;">
+            Choose weights <span class="math">x</span> across assets to
+            <em>minimize</em> portfolio variance (quadratic in weights through
+            the covariance matrix), subject to a target expected return and
+            position limits. This is the textbook QP of finance.
+          </p>
+        </div>
+        <div class="card">
+          <h5>Ridge / constrained regression</h5>
+          <p style="font-size:14px;">
+            Fit coefficients to data by minimizing squared error (quadratic in
+            coefficients), subject to bounds or monotonicity constraints. Any
+            squared-loss fit with linear constraints is a QP.
+          </p>
+        </div>
+      </div>
+
+      <div class="two-col">
+        <div class="card">
+          <h5>Support vector machines</h5>
+          <p style="font-size:14px;">
+            Find the hyperplane separating two classes with the largest margin.
+            "Margin" turns out to be <span class="math">1/‖w‖</span>, so
+            maximizing it is minimizing <span class="math">‖w‖²</span> — a QP.
+            This is what underlies classical SVM classifiers.
+          </p>
+        </div>
+        <div class="card">
+          <h5>Model-predictive control</h5>
+          <p style="font-size:14px;">
+            At every time step a robot or power grid solves a QP: minimize a
+            quadratic cost on tracking error and control effort, subject to
+            linear constraints on actuator limits. Done in milliseconds,
+            millions of times a day.
+          </p>
+        </div>
+      </div>
+
+      <p>
+        The common thread: a quadratic penalty is the <em>natural</em> way to say
+        "bigger deviations hurt more than smaller ones." Variance, squared error,
+        tracking error, effort — all quadratic.
+      </p>
+    </section>
+
+    <section id="qp-solvers">
+      <h2>5 · How QPs are solved</h2>
+      <p>
+        In LP, the optimum lived at a vertex, so we hunted vertices. In QP, the
+        optimum can be anywhere inside, so we use <em>continuous</em> methods.
+        The most visual one is <strong>projected gradient descent</strong>:
+      </p>
+      <ol class="examples">
+        <li>Take a small step in the direction of steepest descent (down the bowl).</li>
+        <li>If the step leaves the feasible region, <em>project</em> it back onto the closest feasible point.</li>
+        <li>Repeat until barely moving.</li>
+      </ol>
+
+      <div class="interactive">
+        <div class="interactive-header">
+          <h4>Interactive · Projected gradient descent</h4>
+          <span class="tag">Step · Animate</span>
+        </div>
+        <div class="interactive-body">
+          <div class="plot-wrap">
+            <canvas class="plot" id="plot-gd"></canvas>
+          </div>
+          <div class="controls" id="ctrl-gd">
+            <p style="font-size:13px;color:var(--ink-soft);margin-top:0;">
+              Watch the iterate slide down the bowl, bounce off constraints when it hits them,
+              and settle at the optimum.
+            </p>
+            <div class="ctrl">
+              <label>Step size <span class="val" id="v-step">0.15</span></label>
+              <input type="range" id="s-step" min="0.02" max="0.4" step="0.01" value="0.15">
+            </div>
+            <button id="b-gd-step">Step ▶</button>
+            <button id="b-gd-auto">Auto-play</button>
+            <button class="secondary" id="b-gd-reset">Reset</button>
+            <div class="readout" id="ro-gd"></div>
+          </div>
+        </div>
+      </div>
+
+      <p class="aside-note">
+        Production QP solvers use more sophisticated methods — active-set and
+        interior-point algorithms — but projected gradient descent captures the
+        essential idea and is what you would implement in a first pass. For our
+        purposes today, "go downhill, stay inside" is the right mental model.
+      </p>
+    </section>
+
+    <section id="qp-lp-vs-qp">
+      <h2>6 · LP vs QP at a glance</h2>
+      <div class="two-col">
+        <div class="card">
+          <h5 style="color:var(--accent-lp);">Linear Programming</h5>
+          <ul style="font-size:14px;padding-left:18px;margin:0;">
+            <li>Linear objective</li>
+            <li>Level sets: parallel lines</li>
+            <li>Optimum: at a <em>vertex</em></li>
+            <li>Solvers: Simplex, interior-point</li>
+            <li>Applications: planning, scheduling, flow</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h5 style="color:var(--accent-qp);">Quadratic Programming</h5>
+          <ul style="font-size:14px;padding-left:18px;margin:0;">
+            <li>Quadratic objective (convex)</li>
+            <li>Level sets: concentric ellipses</li>
+            <li>Optimum: <em>anywhere</em> feasible</li>
+            <li>Solvers: active-set, interior-point, projected gradient</li>
+            <li>Applications: finance, regression, SVM, control</li>
+          </ul>
+        </div>
+      </div>
+      <p>
+        Everything to the <em>left</em> of both — the constraints, the idea of a
+        feasible region, the notion of an optimum — is shared. The objective is
+        what distinguishes them, and that single change drives everything
+        downstream: where the optimum lives, which algorithm you use, which
+        applications it fits.
+      </p>
+    </section>
+
+    <section id="qp-takeaways">
+      <h2>7 · Takeaways</h2>
+      <ul class="examples">
+        <li>QP = linear constraints + convex quadratic objective.</li>
+        <li>Level sets are ellipses, so the optimum is not stuck at a corner.</li>
+        <li>If the unconstrained minimum lies inside the feasible region, that <em>is</em> the solution. Otherwise it sits on a face or corner where the gradient is balanced by active constraints.</li>
+        <li>Go-to algorithms: projected gradient (visual), active-set (classic), interior-point (large-scale). You will almost never write one yourself — reach for a library.</li>
+        <li>If your cost is "squared error," "variance," "tracking error," or "effort squared" with linear rules, you have a QP.</li>
+      </ul>
+    </section>
+
+  </article>
+</section>
+
+</main>
+
+<script>
+/* ============================================================
+   BANNER EXPLAINER — sequenced, narrated scene player
+   ============================================================ */
+
+class BannerExplainer {
+  constructor(rootEl, scenes) {
+    this.root = rootEl;
+    this.svg = rootEl.querySelector('svg.banner-svg');
+    this.captionEl = rootEl.querySelector('.caption');
+    this.dotsEl = rootEl.querySelector('.scene-dots');
+    this.playBtn = rootEl.querySelector('.banner-play');
+    this.scenes = scenes;
+    this.index = 0;
+    this.playing = true;
+    this.timer = null;
+    this.buildDots();
+    this.playBtn.addEventListener('click', () => this.togglePlay());
+    // pause on hover, resume on leave — lets the instructor read aloud
+    this.root.addEventListener('mouseenter', () => { if (this.playing) this.pause(false); });
+    this.root.addEventListener('mouseleave', () => { if (!this.userPaused) this.play(false); });
+    this.show(0);
+    this.queueNext();
+  }
+  buildDots() {
+    this.dotsEl.innerHTML = '';
+    this.scenes.forEach((_, i) => {
+      const dot = document.createElement('span');
+      dot.className = 'dot';
+      dot.setAttribute('role', 'button');
+      dot.setAttribute('aria-label', `Scene ${i+1}`);
+      dot.addEventListener('click', () => {
+        this.index = i;
+        this.show(i);
+        if (this.playing) this.queueNext();
+      });
+      this.dotsEl.appendChild(dot);
+    });
+  }
+  show(n) {
+    this.index = n;
+    this.captionEl.innerHTML = this.scenes[n].caption;
+    this.dotsEl.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === n));
+    // restart scene CSS animations by removing then re-adding the class on next frame
+    for (let i = 0; i < this.scenes.length; i++) this.svg.classList.remove('scene-' + (i+1));
+    // force reflow so the re-add triggers animation
+    void this.svg.offsetWidth;
+    this.svg.classList.add('scene-' + (n+1));
+    // toggle element visibility from data-scenes attribute
+    this.svg.querySelectorAll('[data-scenes]').forEach(el => {
+      const list = el.dataset.scenes.split(',').map(s => parseInt(s.trim(), 10));
+      el.style.opacity = list.includes(n + 1) ? 1 : 0;
+    });
+  }
+  queueNext() {
+    clearTimeout(this.timer);
+    if (!this.playing) return;
+    this.timer = setTimeout(() => {
+      this.index = (this.index + 1) % this.scenes.length;
+      this.show(this.index);
+      this.queueNext();
+    }, this.scenes[this.index].duration);
+  }
+  play(userDriven = true) {
+    this.playing = true;
+    if (userDriven) this.userPaused = false;
+    this.playBtn.textContent = '⏸';
+    this.queueNext();
+  }
+  pause(userDriven = true) {
+    this.playing = false;
+    if (userDriven) this.userPaused = true;
+    this.playBtn.textContent = '▶';
+    clearTimeout(this.timer);
+  }
+  togglePlay() {
+    if (this.playing) this.pause(true); else this.play(true);
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const lpRoot = document.getElementById('lp-banner');
+  if (lpRoot) {
+    new BannerExplainer(lpRoot, [
+      {
+        duration: 5200,
+        caption: '<strong>1 · A plan is a point.</strong> You choose numbers for the things you control — how many chairs, how many tables, how much of each asset. Every possible plan is just a point (x₁, x₂) on the plane.'
+      },
+      {
+        duration: 5200,
+        caption: '<strong>2 · Each rule cuts the plane in half.</strong> A constraint like "x₁ + 3x₂ ≤ 12" divides the plane into an allowed side and a not-allowed side. Only plans on the allowed side are possible.'
+      },
+      {
+        duration: 5200,
+        caption: '<strong>3 · Stack the rules → a polygon.</strong> Pile every constraint together and what is left is the <em>feasible region</em> — always a polygon, with flat sides and sharp corners.'
+      },
+      {
+        duration: 5200,
+        caption: '<strong>4 · The goal is linear.</strong> Any objective like "profit = 3x₁ + 2x₂" has straight level lines. All plans on the same line have equal value; parallel lines mean higher or lower totals.'
+      },
+      {
+        duration: 6200,
+        caption: '<strong>5 · Push the line as far as you can.</strong> Slide that level line in the improving direction while staying inside the polygon. It leaves the region at a <em>corner</em> — that corner is the optimum. LP solvers just hunt for this corner.'
+      },
+    ]);
+  }
+
+  const qpRoot = document.getElementById('qp-banner');
+  if (qpRoot) {
+    new BannerExplainer(qpRoot, [
+      {
+        duration: 5400,
+        caption: '<strong>1 · Linear vs quadratic cost.</strong> A linear cost charges one dollar per unit of deviation. A <em>quadratic</em> cost punishes big deviations far more than small ones — it is the square of the deviation. Think variance, squared error, risk, tracking error.'
+      },
+      {
+        duration: 5200,
+        caption: '<strong>2 · A bowl sitting on an ideal point.</strong> In two variables, a quadratic cost is a bowl shape centred on the <em>target</em>: the plan you would pick if nothing stood in your way. Cost grows the farther you are from that target.'
+      },
+      {
+        duration: 5600,
+        caption: '<strong>3 · Slicing the bowl gives ellipses.</strong> Cut the bowl at equal heights: the contours — the points of equal cost — are concentric <em>ellipses</em> around the target, not parallel lines like in LP.'
+      },
+      {
+        duration: 5200,
+        caption: '<strong>4 · Same kind of constraints.</strong> The feasible region is still a polygon — constraints are still linear inequalities. The bowl and the polygon live on the same plane and the polygon might not contain the target.'
+      },
+      {
+        duration: 6200,
+        caption: '<strong>5 · Closest feasible point.</strong> If the target lies inside the region, that is your answer. Otherwise, slide outward along the ellipses until you just touch the polygon — the <em>closest feasible point</em>. It can land inside, on a face, or at a corner — not pinned to a vertex like in LP.'
+      },
+    ]);
+  }
+});
+
+/* ============================================================
+   SHARED PLOT UTILITIES
+   ============================================================ */
+
+function setupCanvas(canvas) {
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = rect.width * dpr;
+  canvas.height = rect.height * dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return { ctx, w: rect.width, h: rect.height };
+}
+
+class Plot {
+  constructor(canvas, opts = {}) {
+    this.canvas = canvas;
+    const { ctx, w, h } = setupCanvas(canvas);
+    this.ctx = ctx;
+    this.w = w; this.h = h;
+    this.padL = opts.padL ?? 52;
+    this.padR = opts.padR ?? 18;
+    this.padT = opts.padT ?? 22;
+    this.padB = opts.padB ?? 44;
+    this.setBounds(opts.xmin ?? 0, opts.xmax ?? 10, opts.ymin ?? 0, opts.ymax ?? 10);
+    window.addEventListener('resize', () => this.resize());
+  }
+  resize() {
+    const { ctx, w, h } = setupCanvas(this.canvas);
+    this.ctx = ctx; this.w = w; this.h = h;
+    if (this.onResize) this.onResize();
+  }
+  setBounds(xmin, xmax, ymin, ymax) {
+    this.xmin = xmin; this.xmax = xmax; this.ymin = ymin; this.ymax = ymax;
+  }
+  sx(x) { return this.padL + (x - this.xmin) / (this.xmax - this.xmin) * (this.w - this.padL - this.padR); }
+  sy(y) { return this.h - this.padB - (y - this.ymin) / (this.ymax - this.ymin) * (this.h - this.padT - this.padB); }
+  wx(px) { return this.xmin + (px - this.padL) / (this.w - this.padL - this.padR) * (this.xmax - this.xmin); }
+  wy(py) { return this.ymin + (this.h - this.padB - py) / (this.h - this.padT - this.padB) * (this.ymax - this.ymin); }
+  clear() {
+    this.ctx.clearRect(0, 0, this.w, this.h);
+  }
+  drawAxes(opts = {}) {
+    const ctx = this.ctx;
+    const step = opts.step ?? 1;
+    ctx.save();
+    // grid
+    ctx.strokeStyle = '#f0ede5';
+    ctx.lineWidth = 1;
+    for (let x = Math.ceil(this.xmin / step) * step; x <= this.xmax; x += step) {
+      ctx.beginPath();
+      ctx.moveTo(this.sx(x), this.sy(this.ymin));
+      ctx.lineTo(this.sx(x), this.sy(this.ymax));
+      ctx.stroke();
+    }
+    for (let y = Math.ceil(this.ymin / step) * step; y <= this.ymax; y += step) {
+      ctx.beginPath();
+      ctx.moveTo(this.sx(this.xmin), this.sy(y));
+      ctx.lineTo(this.sx(this.xmax), this.sy(y));
+      ctx.stroke();
+    }
+    // axes
+    ctx.strokeStyle = '#888';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(this.sx(this.xmin), this.sy(0));
+    ctx.lineTo(this.sx(this.xmax), this.sy(0));
+    ctx.moveTo(this.sx(0), this.sy(this.ymin));
+    ctx.lineTo(this.sx(0), this.sy(this.ymax));
+    ctx.stroke();
+    // ticks & labels
+    ctx.fillStyle = '#666';
+    ctx.font = '11px -apple-system, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    for (let x = Math.ceil(this.xmin / step) * step; x <= this.xmax; x += step) {
+      if (Math.abs(x) < 1e-9) continue;
+      ctx.fillText(String(x), this.sx(x), this.sy(this.ymin) + 4);
+    }
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+    for (let y = Math.ceil(this.ymin / step) * step; y <= this.ymax; y += step) {
+      if (Math.abs(y) < 1e-9) continue;
+      ctx.fillText(String(y), this.sx(this.xmin) - 6, this.sy(y));
+    }
+    if (opts.xlabel) {
+      ctx.save();
+      ctx.textAlign = 'right';
+      ctx.textBaseline = 'top';
+      ctx.fillStyle = '#444';
+      ctx.font = '600 12px -apple-system, sans-serif';
+      ctx.fillText(opts.xlabel, this.sx(this.xmax), this.sy(this.ymin) + 24);
+      ctx.restore();
+    }
+    if (opts.ylabel) {
+      ctx.save();
+      ctx.fillStyle = '#444';
+      ctx.font = '600 12px -apple-system, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      const cy = (this.sy(this.ymax) + this.sy(this.ymin)) / 2;
+      ctx.translate(this.sx(this.xmin) - 34, cy);
+      ctx.rotate(-Math.PI / 2);
+      ctx.fillText(opts.ylabel, 0, 0);
+      ctx.restore();
+    }
+    ctx.restore();
+  }
+  fillPolygon(pts, fillStyle, strokeStyle, lineWidth = 1.5) {
+    if (pts.length < 3) return;
+    const ctx = this.ctx;
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(this.sx(pts[0][0]), this.sy(pts[0][1]));
+    for (let i = 1; i < pts.length; i++) ctx.lineTo(this.sx(pts[i][0]), this.sy(pts[i][1]));
+    ctx.closePath();
+    if (fillStyle) { ctx.fillStyle = fillStyle; ctx.fill(); }
+    if (strokeStyle) {
+      ctx.strokeStyle = strokeStyle;
+      ctx.lineWidth = lineWidth;
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+  drawLine(p1, p2, color = '#444', width = 1, dash = null) {
+    const ctx = this.ctx;
+    ctx.save();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = width;
+    if (dash) ctx.setLineDash(dash);
+    ctx.beginPath();
+    ctx.moveTo(this.sx(p1[0]), this.sy(p1[1]));
+    ctx.lineTo(this.sx(p2[0]), this.sy(p2[1]));
+    ctx.stroke();
+    ctx.restore();
+  }
+  drawDot(p, color = '#222', r = 5, label = null) {
+    const ctx = this.ctx;
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(this.sx(p[0]), this.sy(p[1]), r, 0, 2 * Math.PI);
+    ctx.fillStyle = color;
+    ctx.fill();
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    if (label) {
+      ctx.fillStyle = '#222';
+      ctx.font = 'bold 12px -apple-system, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'bottom';
+      ctx.fillText(label, this.sx(p[0]) + r + 4, this.sy(p[1]) - 4);
+    }
+    ctx.restore();
+  }
+  // Draw an iso-level line of c[0]*x + c[1]*y = v within current bounds
+  drawLinearLevel(c, v, color = '#2b6cb0', dash = null, width = 1.5) {
+    // find two intersections with bounding box
+    const pts = [];
+    // solve for y at xmin, xmax
+    if (Math.abs(c[1]) > 1e-9) {
+      for (const x of [this.xmin, this.xmax]) {
+        const y = (v - c[0] * x) / c[1];
+        if (y >= this.ymin - 1e-9 && y <= this.ymax + 1e-9) pts.push([x, y]);
+      }
+    }
+    if (Math.abs(c[0]) > 1e-9) {
+      for (const y of [this.ymin, this.ymax]) {
+        const x = (v - c[1] * y) / c[0];
+        if (x >= this.xmin - 1e-9 && x <= this.xmax + 1e-9) pts.push([x, y]);
+      }
+    }
+    if (pts.length >= 2) {
+      this.drawLine(pts[0], pts[1], color, width, dash);
+    }
+  }
+  // Draw ellipse: level set of ½ (x-c)^T Q (x-c) = v
+  drawEllipse(center, Q, v, color = '#6b46c1', width = 1.5, dash = null) {
+    if (v <= 0) return;
+    // Eigen-decompose 2x2 symmetric Q
+    const { a, b, d } = { a: Q[0][0], b: Q[0][1], d: Q[1][1] };
+    let l1, l2, v1, v2;
+    if (Math.abs(b) < 1e-9) {
+      // axis-aligned: eigenvalues are a (with x-axis) and d (with y-axis)
+      l1 = a; v1 = [1, 0];
+      l2 = d; v2 = [0, 1];
+    } else {
+      const tr = a + d, det = a * d - b * b;
+      const disc = Math.sqrt(Math.max(0, tr * tr / 4 - det));
+      l1 = tr / 2 + disc; l2 = tr / 2 - disc;
+      v1 = [l1 - d, b]; v2 = [l2 - d, b];
+      const n1 = Math.hypot(v1[0], v1[1]); v1 = [v1[0]/n1, v1[1]/n1];
+      const n2 = Math.hypot(v2[0], v2[1]); v2 = [v2[0]/n2, v2[1]/n2];
+    }
+    // semi-axes: ½ λ a² = v → a = sqrt(2v/λ)
+    const a1 = Math.sqrt(2 * v / Math.max(l1, 1e-9));
+    const a2 = Math.sqrt(2 * v / Math.max(l2, 1e-9));
+    const ctx = this.ctx;
+    ctx.save();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = width;
+    if (dash) ctx.setLineDash(dash);
+    ctx.beginPath();
+    const N = 96;
+    for (let i = 0; i <= N; i++) {
+      const t = (i / N) * 2 * Math.PI;
+      const c1 = a1 * Math.cos(t), c2 = a2 * Math.sin(t);
+      const wx = center[0] + v1[0] * c1 + v2[0] * c2;
+      const wy = center[1] + v1[1] * c1 + v2[1] * c2;
+      const px = this.sx(wx), py = this.sy(wy);
+      if (i === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    }
+    ctx.stroke();
+    ctx.restore();
+  }
+  text(p, str, color = '#222', opts = {}) {
+    const ctx = this.ctx;
+    ctx.save();
+    ctx.fillStyle = color;
+    ctx.font = opts.font ?? '12px -apple-system, sans-serif';
+    ctx.textAlign = opts.align ?? 'left';
+    ctx.textBaseline = opts.baseline ?? 'bottom';
+    ctx.fillText(str, this.sx(p[0]), this.sy(p[1]));
+    ctx.restore();
+  }
+}
+
+/* ============================================================
+   SHARED GEOMETRY: feasible polygon from linear constraints
+   ============================================================
+   Constraints in the form a·x + b·y ≤ c. Include box x≥0, y≥0, x≤xmax, y≤ymax as needed.
+*/
+
+function polygonFromConstraints(constraints) {
+  // Enumerate pairwise intersections, keep those satisfying all constraints, sort by angle.
+  const pts = [];
+  const n = constraints.length;
+  for (let i = 0; i < n; i++) {
+    for (let j = i + 1; j < n; j++) {
+      const { a: a1, b: b1, c: c1 } = constraints[i];
+      const { a: a2, b: b2, c: c2 } = constraints[j];
+      const det = a1 * b2 - a2 * b1;
+      if (Math.abs(det) < 1e-9) continue;
+      const x = (c1 * b2 - c2 * b1) / det;
+      const y = (a1 * c2 - a2 * c1) / det;
+      // check feasibility
+      let ok = true;
+      for (const { a, b, c } of constraints) {
+        if (a * x + b * y > c + 1e-6) { ok = false; break; }
+      }
+      if (ok) pts.push([x, y]);
+    }
+  }
+  // dedupe
+  const uniq = [];
+  for (const p of pts) {
+    if (!uniq.some(q => Math.hypot(q[0] - p[0], q[1] - p[1]) < 1e-5)) uniq.push(p);
+  }
+  if (uniq.length < 3) return uniq;
+  // sort by angle around centroid
+  const cx = uniq.reduce((s, p) => s + p[0], 0) / uniq.length;
+  const cy = uniq.reduce((s, p) => s + p[1], 0) / uniq.length;
+  uniq.sort((p, q) => Math.atan2(p[1] - cy, p[0] - cx) - Math.atan2(q[1] - cy, q[0] - cx));
+  return uniq;
+}
+
+/* ============================================================
+   TAB SWITCHING
+   ============================================================ */
+document.querySelectorAll('nav.main-tabs button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const tab = btn.dataset.tab;
+    document.querySelectorAll('nav.main-tabs button').forEach(b => b.classList.toggle('active', b === btn));
+    document.querySelectorAll('.panel').forEach(p => p.classList.toggle('active', p.id === 'panel-' + tab));
+    // Force canvas resize on activation
+    document.querySelectorAll(`#panel-${tab} canvas.plot`).forEach(c => {
+      const ev = new Event('resize'); window.dispatchEvent(ev);
+    });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+});
+
+/* ============================================================
+   TOC current-section highlighting
+   ============================================================ */
+function setupTOC(scope) {
+  const tocLinks = document.querySelectorAll(`aside.toc[data-scope="${scope}"] a`);
+  const sections = Array.from(tocLinks).map(a => document.querySelector(a.getAttribute('href')));
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        const id = e.target.id;
+        tocLinks.forEach(a => a.classList.toggle('current', a.getAttribute('href') === '#' + id));
+      }
+    });
+  }, { rootMargin: '-30% 0px -60% 0px' });
+  sections.forEach(s => s && observer.observe(s));
+}
+setupTOC('lp');
+setupTOC('qp');
+
+/* ============================================================
+   INTERACTIVE 1 — FACTORY PRODUCTION (LP)
+   ============================================================ */
+(function factoryInteractive() {
+  const canvas = document.getElementById('plot-factory');
+  if (!canvas) return;
+  const plot = new Plot(canvas, { xmin: 0, xmax: 10, ymin: 0, ymax: 10 });
+
+  const state = {
+    pc: 40, pt: 50, wood: 12, labor: 16,
+    sweepV: null, sweepDir: 1, sweepAnim: false,
+  };
+
+  const $ = id => document.getElementById(id);
+  function bindSlider(id, key, label) {
+    $(id).addEventListener('input', e => {
+      state[key] = +e.target.value;
+      $(label).textContent = state[key];
+      render();
+    });
+  }
+  bindSlider('s-pc', 'pc', 'v-pc');
+  bindSlider('s-pt', 'pt', 'v-pt');
+  bindSlider('s-wood', 'wood', 'v-wood');
+  bindSlider('s-lab', 'labor', 'v-lab');
+
+  $('b-reset-fact').addEventListener('click', () => {
+    state.pc = 40; state.pt = 50; state.wood = 12; state.labor = 16;
+    $('s-pc').value = 40; $('s-pt').value = 50; $('s-wood').value = 12; $('s-lab').value = 16;
+    $('v-pc').textContent = 40; $('v-pt').textContent = 50; $('v-wood').textContent = 12; $('v-lab').textContent = 16;
+    state.sweepAnim = false;
+    render();
+  });
+
+  $('b-sweep').addEventListener('click', () => {
+    if (state.sweepAnim) { state.sweepAnim = false; $('b-sweep').textContent = '▶ Sweep profit line'; return; }
+    const opt = solve();
+    if (!opt) return;
+    state.sweepV = 0;
+    state.sweepTarget = state.pc * opt.x + state.pt * opt.y;
+    state.sweepAnim = true;
+    $('b-sweep').textContent = '⏸ Pause';
+    animateSweep();
+  });
+
+  function animateSweep() {
+    if (!state.sweepAnim) return;
+    state.sweepV += (state.sweepTarget / 120);
+    if (state.sweepV >= state.sweepTarget) {
+      state.sweepV = state.sweepTarget;
+      state.sweepAnim = false;
+      $('b-sweep').textContent = '▶ Sweep profit line';
+    }
+    render();
+    if (state.sweepAnim) requestAnimationFrame(animateSweep);
+  }
+
+  function feasiblePolygon() {
+    return polygonFromConstraints([
+      { a: 1, b: 3, c: state.wood },
+      { a: 2, b: 2, c: state.labor },
+      { a: -1, b: 0, c: 0 },
+      { a: 0, b: -1, c: 0 },
+      { a: 1, b: 0, c: 100 }, // box (large, unlikely binding)
+      { a: 0, b: 1, c: 100 },
+    ]);
+  }
+
+  function solve() {
+    const poly = feasiblePolygon();
+    if (!poly.length) return null;
+    let best = null;
+    for (const [x, y] of poly) {
+      const val = state.pc * x + state.pt * y;
+      if (!best || val > best.val) best = { x, y, val };
+    }
+    return best;
+  }
+
+  function render() {
+    $('supply-readout').textContent = `${state.wood} wood, ${state.labor} labor hours`;
+    const maxX = Math.max(10, state.wood + 2);
+    const maxY = Math.max(10, Math.ceil(state.wood / 3) + state.labor / 2 + 2);
+    plot.setBounds(0, maxX, 0, maxY);
+    plot.clear();
+    plot.drawAxes({ step: Math.max(1, Math.round(maxX / 10)), xlabel: 'chairs', ylabel: 'tables' });
+
+    const poly = feasiblePolygon();
+    plot.fillPolygon(poly, 'rgba(43,108,176,0.14)', '#2b6cb0', 1.5);
+
+    // constraint boundary labels (extensions)
+    // wood: x + 3y = wood
+    plot.drawLine([0, state.wood / 3], [state.wood, 0], '#2b6cb0', 1, [4, 4]);
+    // labor: 2x + 2y = labor
+    plot.drawLine([0, state.labor / 2], [state.labor / 2, 0], '#b7791f', 1, [4, 4]);
+
+    plot.text([state.wood + 0.1, 0.2], 'wood limit', '#2b6cb0', { font: '11px sans-serif' });
+    plot.text([state.labor / 2 + 0.1, 0.2], 'labor limit', '#b7791f', { font: '11px sans-serif' });
+
+    const opt = solve();
+
+    // objective level lines (several)
+    if (opt) {
+      const optVal = state.pc * opt.x + state.pt * opt.y;
+      const steps = 6;
+      for (let i = 1; i <= steps; i++) {
+        const v = (optVal * i) / steps;
+        plot.drawLinearLevel([state.pc, state.pt], v, 'rgba(47,133,90,0.25)', [3, 3], 1);
+      }
+      // current sweep line
+      if (state.sweepV != null && state.sweepAnim) {
+        plot.drawLinearLevel([state.pc, state.pt], state.sweepV, '#2f855a', null, 2.5);
+      } else {
+        plot.drawLinearLevel([state.pc, state.pt], optVal, '#2f855a', null, 2.5);
+      }
+      plot.drawDot([opt.x, opt.y], '#2f855a', 7, `(${opt.x.toFixed(1)}, ${opt.y.toFixed(1)})`);
+    }
+
+    const ro = $('ro-factory');
+    if (opt) {
+      ro.innerHTML =
+        `<span class="label-ro">Plan:</span> ${opt.x.toFixed(1)} chairs, ${opt.y.toFixed(1)} tables<br>` +
+        `<span class="label-ro">Profit:</span> <span class="opt">$${opt.val.toFixed(0)}</span>`;
+    } else {
+      ro.textContent = 'No feasible plan';
+    }
+  }
+
+  plot.onResize = render;
+  render();
+})();
+
+/* ============================================================
+   INTERACTIVE 2 — SIMPLEX VERTEX WALK
+   ============================================================ */
+(function simplexInteractive() {
+  const canvas = document.getElementById('plot-simplex');
+  if (!canvas) return;
+  const plot = new Plot(canvas, { xmin: 0, xmax: 10, ymin: 0, ymax: 8 });
+
+  // Pentagon: hand-designed so vertex walk is visible
+  const constraints = [
+    { a: -1, b: 0, c: 0 },        // x >= 0
+    { a: 0, b: -1, c: 0 },        // y >= 0
+    { a: 1, b: 0, c: 8 },         // x <= 8
+    { a: 0, b: 1, c: 6 },         // y <= 6
+    { a: 1, b: 1, c: 11 },        // x + y <= 11
+    { a: 1, b: -1, c: 5 },        // x - y <= 5  (cuts bottom-right corner)
+  ];
+  const c = [3, 2]; // objective coefficients
+
+  const vertices = polygonFromConstraints(constraints);
+  // neighbors = polygon adjacency
+  const adjacency = vertices.map((_, i) => [(i - 1 + vertices.length) % vertices.length, (i + 1) % vertices.length]);
+  function objAt(v) { return c[0] * v[0] + c[1] * v[1]; }
+
+  const state = {
+    current: 0,  // start at vertex 0
+    path: [0],
+    done: false,
+    autoTimer: null,
+  };
+
+  function step() {
+    if (state.done) return false;
+    const neigh = adjacency[state.current];
+    const curVal = objAt(vertices[state.current]);
+    let bestIdx = state.current, bestVal = curVal;
+    for (const n of neigh) {
+      const v = objAt(vertices[n]);
+      if (v > bestVal + 1e-6) { bestVal = v; bestIdx = n; }
+    }
+    if (bestIdx === state.current) {
+      state.done = true;
+      render();
+      return false;
+    }
+    state.current = bestIdx;
+    state.path.push(bestIdx);
+    render();
+    return true;
+  }
+
+  function reset() {
+    state.current = 0;
+    state.path = [0];
+    state.done = false;
+    if (state.autoTimer) { clearInterval(state.autoTimer); state.autoTimer = null; document.getElementById('b-simplex-auto').textContent = 'Auto-play'; }
+    render();
+  }
+
+  document.getElementById('b-simplex-step').addEventListener('click', step);
+  document.getElementById('b-simplex-reset').addEventListener('click', reset);
+  document.getElementById('b-simplex-auto').addEventListener('click', () => {
+    const btn = document.getElementById('b-simplex-auto');
+    if (state.autoTimer) {
+      clearInterval(state.autoTimer); state.autoTimer = null;
+      btn.textContent = 'Auto-play';
+    } else {
+      btn.textContent = 'Stop';
+      state.autoTimer = setInterval(() => {
+        if (!step()) { clearInterval(state.autoTimer); state.autoTimer = null; btn.textContent = 'Auto-play'; }
+      }, 900);
+    }
+  });
+
+  function render() {
+    plot.setBounds(-0.5, 10, -0.5, 8);
+    plot.clear();
+    plot.drawAxes({ step: 1, xlabel: 'x', ylabel: 'y' });
+    plot.fillPolygon(vertices, 'rgba(43,108,176,0.10)', '#2b6cb0', 1.5);
+
+    // level curves of objective at multiple values
+    const vals = vertices.map(objAt);
+    const vmin = Math.min(...vals), vmax = Math.max(...vals);
+    for (let k = 0; k < 6; k++) {
+      const v = vmin + (vmax - vmin) * (k / 5);
+      plot.drawLinearLevel(c, v, 'rgba(47,133,90,0.18)', [3, 3], 1);
+    }
+
+    // path arrows
+    for (let i = 0; i < state.path.length - 1; i++) {
+      const a = vertices[state.path[i]], b = vertices[state.path[i + 1]];
+      plot.drawLine(a, b, '#b7791f', 2.5);
+      // arrowhead
+      const ax = plot.sx(a[0]), ay = plot.sy(a[1]);
+      const bx = plot.sx(b[0]), by = plot.sy(b[1]);
+      const angle = Math.atan2(by - ay, bx - ax);
+      const ctx = plot.ctx;
+      ctx.save();
+      ctx.fillStyle = '#b7791f';
+      ctx.translate(bx, by); ctx.rotate(angle);
+      ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(-10, -5); ctx.lineTo(-10, 5); ctx.closePath(); ctx.fill();
+      ctx.restore();
+    }
+
+    // draw all vertices with their objective values
+    vertices.forEach((v, i) => {
+      const visited = state.path.includes(i);
+      const current = i === state.current;
+      const color = current ? '#2f855a' : visited ? '#b7791f' : '#888';
+      const r = current ? 8 : 5;
+      plot.drawDot(v, color, r);
+      const ctx = plot.ctx;
+      ctx.save();
+      ctx.fillStyle = '#444';
+      ctx.font = '11px monospace';
+      ctx.textAlign = 'left';
+      ctx.fillText(objAt(v).toFixed(0), plot.sx(v[0]) + 10, plot.sy(v[1]) + 4);
+      ctx.restore();
+    });
+
+    // show candidate neighbors at current
+    if (!state.done) {
+      const curVal = objAt(vertices[state.current]);
+      for (const n of adjacency[state.current]) {
+        if (state.path.includes(n)) continue;
+        const v = objAt(vertices[n]);
+        if (v > curVal) {
+          plot.drawLine(vertices[state.current], vertices[n], 'rgba(183,121,31,0.4)', 2, [5, 5]);
+        }
+      }
+    }
+
+    const ro = document.getElementById('ro-simplex');
+    const cur = vertices[state.current];
+    ro.innerHTML =
+      `<span class="label-ro">Step:</span> ${state.path.length - 1}<br>` +
+      `<span class="label-ro">At vertex:</span> (${cur[0].toFixed(1)}, ${cur[1].toFixed(1)})<br>` +
+      `<span class="label-ro">Objective:</span> <span class="${state.done ? 'opt' : ''}">${objAt(cur).toFixed(1)}</span>` +
+      (state.done ? ' · optimal' : '');
+  }
+
+  plot.onResize = render;
+  render();
+})();
+
+/* ============================================================
+   INTERACTIVE 3 — TOGGLE: LP vs QP ON SHARED REGION
+   ============================================================ */
+(function toggleInteractive() {
+  const canvas = document.getElementById('plot-toggle');
+  if (!canvas) return;
+  const plot = new Plot(canvas, { xmin: -1, xmax: 9, ymin: -1, ymax: 8 });
+
+  // Shared feasible region — same polygon for both modes
+  const constraints = [
+    { a: -1, b: 0, c: 0 },        // x >= 0
+    { a: 0, b: -1, c: 0 },        // y >= 0
+    { a: 1, b: 1, c: 8 },         // x + y <= 8
+    { a: 2, b: -1, c: 6 },        // 2x - y <= 6
+    { a: -1, b: 2, c: 8 },        // -x + 2y <= 8
+    { a: 1, b: 0, c: 7 },
+    { a: 0, b: 1, c: 6 },
+  ];
+  const region = polygonFromConstraints(constraints);
+
+  const state = {
+    mode: 'lp',
+    target: [6, 5.5],        // red dot position (unconstrained optimum target)
+    aspect: 0.6,
+    tilt: 0,
+    dragging: false,
+  };
+
+  const $ = id => document.getElementById(id);
+
+  // toggle handlers
+  document.querySelectorAll('#toggle-mode button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.mode = btn.dataset.mode;
+      document.querySelectorAll('#toggle-mode button').forEach(b => b.classList.toggle('active', b === btn));
+      const showQpCtrls = state.mode === 'qp';
+      $('ctrl-qp-shape').style.display = showQpCtrls ? '' : 'none';
+      $('ctrl-qp-tilt').style.display = showQpCtrls ? '' : 'none';
+      render();
+    });
+  });
+  $('ctrl-qp-shape').style.display = state.mode === 'qp' ? '' : 'none';
+  $('ctrl-qp-tilt').style.display = state.mode === 'qp' ? '' : 'none';
+
+  $('s-aspect').addEventListener('input', e => { state.aspect = +e.target.value; $('v-aspect').textContent = state.aspect.toFixed(1); render(); });
+  $('s-tilt').addEventListener('input', e => { state.tilt = +e.target.value; $('v-tilt').textContent = state.tilt + '°'; render(); });
+
+  // drag handling
+  canvas.addEventListener('pointerdown', e => {
+    const rect = canvas.getBoundingClientRect();
+    const px = e.clientX - rect.left, py = e.clientY - rect.top;
+    const tx = plot.sx(state.target[0]), ty = plot.sy(state.target[1]);
+    if (Math.hypot(px - tx, py - ty) < 16) {
+      state.dragging = true;
+      canvas.setPointerCapture(e.pointerId);
+    }
+  });
+  canvas.addEventListener('pointermove', e => {
+    if (!state.dragging) return;
+    const rect = canvas.getBoundingClientRect();
+    const x = plot.wx(e.clientX - rect.left);
+    const y = plot.wy(e.clientY - rect.top);
+    state.target = [
+      Math.max(plot.xmin, Math.min(plot.xmax, x)),
+      Math.max(plot.ymin, Math.min(plot.ymax, y)),
+    ];
+    render();
+  });
+  canvas.addEventListener('pointerup', e => {
+    state.dragging = false;
+    try { canvas.releasePointerCapture(e.pointerId); } catch {}
+  });
+
+  // LP solve: vertex that maximizes c·x, where c is target direction (as if target is far away)
+  // But for our intuition we want: the LP "objective vector" points from origin to target.
+  function solveLP() {
+    // objective = target · x  (maximize)
+    let best = null;
+    for (const v of region) {
+      const val = state.target[0] * v[0] + state.target[1] * v[1];
+      if (!best || val > best.val) best = { pt: v, val };
+    }
+    return best ? best.pt : null;
+  }
+
+  // Build Q for QP from aspect/tilt. Eigenvalues 1 and 1/aspect^2, rotated by tilt.
+  function buildQ() {
+    const l1 = 1, l2 = 1 / (state.aspect * state.aspect);
+    const th = state.tilt * Math.PI / 180;
+    const co = Math.cos(th), si = Math.sin(th);
+    // Q = R diag(l1,l2) R^T
+    const a = co * co * l1 + si * si * l2;
+    const b = co * si * l1 - co * si * l2;
+    const d = si * si * l1 + co * co * l2;
+    return [[a, b], [b, d]];
+  }
+
+  // QP solve: minimize ½ (x-t)^T Q (x-t)  s.t. feasible region
+  // Strategy: check unconstrained (target) if inside, else check projection onto each edge,
+  // else vertex. Return global min over these candidates.
+  function solveQP() {
+    const Q = buildQ();
+    const t = state.target;
+    const f = p => 0.5 * (Q[0][0] * (p[0]-t[0])**2 + 2 * Q[0][1] * (p[0]-t[0])*(p[1]-t[1]) + Q[1][1] * (p[1]-t[1])**2);
+    const feasible = p => {
+      for (const { a, b, c } of constraints) if (a * p[0] + b * p[1] > c + 1e-6) return false;
+      return true;
+    };
+    const candidates = [];
+    if (feasible(t)) candidates.push({ pt: t, val: 0 });
+    // vertices
+    for (const v of region) candidates.push({ pt: v, val: f(v) });
+    // projections onto each edge (active constraint)
+    for (let i = 0; i < region.length; i++) {
+      const a = region[i], b = region[(i + 1) % region.length];
+      // parametrize segment: p(s) = a + s(b-a), s∈[0,1]
+      const dx = b[0] - a[0], dy = b[1] - a[1];
+      // minimize ½ (p-t)^T Q (p-t) over s, unconstrained s
+      // d/ds [½ (a+s d - t)^T Q (a+s d - t)] = d^T Q (a + s d - t) = 0
+      // s = d^T Q (t - a) / (d^T Q d)
+      const u = [t[0] - a[0], t[1] - a[1]];
+      const Qd = [Q[0][0]*dx + Q[0][1]*dy, Q[0][1]*dx + Q[1][1]*dy];
+      const num = Qd[0]*u[0] + Qd[1]*u[1];
+      const den = Qd[0]*dx + Qd[1]*dy;
+      if (Math.abs(den) < 1e-9) continue;
+      let s = num / den;
+      s = Math.max(0, Math.min(1, s));
+      const p = [a[0] + s * dx, a[1] + s * dy];
+      if (feasible(p)) candidates.push({ pt: p, val: f(p) });
+    }
+    let best = null;
+    for (const c of candidates) if (!best || c.val < best.val) best = c;
+    return best ? best.pt : null;
+  }
+
+  function render() {
+    plot.clear();
+    plot.drawAxes({ step: 1, xlabel: 'x', ylabel: 'y' });
+    const fill = state.mode === 'lp' ? 'rgba(43,108,176,0.12)' : 'rgba(107,70,193,0.12)';
+    const stroke = state.mode === 'lp' ? '#2b6cb0' : '#6b46c1';
+    plot.fillPolygon(region, fill, stroke, 1.5);
+
+    if (state.mode === 'lp') {
+      // level lines perpendicular to target direction
+      const c = state.target;
+      const opt = solveLP();
+      const optVal = c[0] * opt[0] + c[1] * opt[1];
+      for (let k = 1; k <= 6; k++) {
+        plot.drawLinearLevel(c, (optVal * k) / 6, 'rgba(43,108,176,0.22)', [3, 3], 1);
+      }
+      plot.drawLinearLevel(c, optVal, '#2b6cb0', null, 2);
+      // draw gradient arrow
+      const len = Math.hypot(c[0], c[1]);
+      if (len > 0.1) {
+        const ctx = plot.ctx;
+        ctx.save();
+        ctx.strokeStyle = '#c53030';
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([2, 2]);
+        ctx.beginPath();
+        ctx.moveTo(plot.sx(0), plot.sy(0));
+        ctx.lineTo(plot.sx(c[0]), plot.sy(c[1]));
+        ctx.stroke();
+        ctx.restore();
+      }
+      plot.drawDot(opt, '#2f855a', 8, 'optimum');
+    } else {
+      // QP: draw ellipse contours centered at target
+      const Q = buildQ();
+      const opt = solveQP();
+      const fopt = 0.5 * (Q[0][0] * (opt[0]-state.target[0])**2 + 2*Q[0][1]*(opt[0]-state.target[0])*(opt[1]-state.target[1]) + Q[1][1]*(opt[1]-state.target[1])**2);
+      const vmax = Math.max(fopt * 2, 1);
+      for (let k = 1; k <= 7; k++) {
+        const v = vmax * k / 7;
+        plot.drawEllipse(state.target, Q, v, 'rgba(107,70,193,0.25)', 1, [3, 3]);
+      }
+      // boundary ellipse through optimum
+      if (fopt > 1e-6) {
+        plot.drawEllipse(state.target, Q, fopt, '#6b46c1', 1.8, null);
+      }
+      plot.drawDot(opt, '#2f855a', 8, 'optimum');
+    }
+
+    // draw target
+    plot.drawDot(state.target, '#c53030', 7, 'target');
+    const ctx = plot.ctx;
+    ctx.save();
+    ctx.strokeStyle = '#c53030';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    const tx = plot.sx(state.target[0]), ty = plot.sy(state.target[1]);
+    ctx.arc(tx, ty, 12, 0, 2 * Math.PI);
+    ctx.stroke();
+    ctx.restore();
+
+    const ro = document.getElementById('ro-toggle');
+    const opt = state.mode === 'lp' ? solveLP() : solveQP();
+    const dist = Math.hypot(opt[0] - state.target[0], opt[1] - state.target[1]);
+    ro.innerHTML =
+      `<span class="label-ro">Mode:</span> ${state.mode.toUpperCase()}<br>` +
+      `<span class="label-ro">Target:</span> (${state.target[0].toFixed(1)}, ${state.target[1].toFixed(1)})<br>` +
+      `<span class="label-ro">Optimum:</span> <span class="opt">(${opt[0].toFixed(2)}, ${opt[1].toFixed(2)})</span>` +
+      (state.mode === 'qp' ? `<br><span class="label-ro">Gap to target:</span> ${dist.toFixed(2)}` : '');
+  }
+
+  plot.onResize = render;
+  render();
+})();
+
+/* ============================================================
+   INTERACTIVE 4 — PROJECTED GRADIENT DESCENT (QP)
+   ============================================================ */
+(function gdInteractive() {
+  const canvas = document.getElementById('plot-gd');
+  if (!canvas) return;
+  const plot = new Plot(canvas, { xmin: -0.5, xmax: 9, ymin: -0.5, ymax: 8 });
+
+  const constraints = [
+    { a: -1, b: 0, c: 0 },
+    { a: 0, b: -1, c: 0 },
+    { a: 1, b: 1, c: 8 },
+    { a: 1, b: -2, c: 2 },
+    { a: -2, b: 1, c: 2 },
+    { a: 1, b: 0, c: 7 },
+    { a: 0, b: 1, c: 7 },
+  ];
+  const region = polygonFromConstraints(constraints);
+
+  // target (unconstrained min) chosen outside the feasible region for demonstration
+  const target = [7.5, 7.5];
+  const Q = [[1, 0.3], [0.3, 1]];
+
+  function f(p) {
+    const dx = p[0] - target[0], dy = p[1] - target[1];
+    return 0.5 * (Q[0][0] * dx * dx + 2 * Q[0][1] * dx * dy + Q[1][1] * dy * dy);
+  }
+  function grad(p) {
+    const dx = p[0] - target[0], dy = p[1] - target[1];
+    return [Q[0][0] * dx + Q[0][1] * dy, Q[0][1] * dx + Q[1][1] * dy];
+  }
+  function feasible(p) {
+    for (const { a, b, c } of constraints) if (a * p[0] + b * p[1] > c + 1e-6) return false;
+    return true;
+  }
+  // Project onto a halfspace a·x ≤ c: x' = x - max(0, a·x - c) * a / |a|²
+  function projectHalfspace(p, h) {
+    const { a, b, c } = h;
+    const v = a * p[0] + b * p[1] - c;
+    if (v <= 1e-9) return p;
+    const n2 = a * a + b * b;
+    return [p[0] - v * a / n2, p[1] - v * b / n2];
+  }
+  // Project onto polytope by iterated halfspace projection
+  function projectPolytope(p) {
+    let x = p.slice();
+    for (let iter = 0; iter < 60; iter++) {
+      let violated = false;
+      for (const h of constraints) {
+        if (h.a * x[0] + h.b * x[1] > h.c + 1e-7) {
+          x = projectHalfspace(x, h);
+          violated = true;
+        }
+      }
+      if (!violated) break;
+    }
+    return x;
+  }
+
+  const state = {
+    x: [0.5, 0.5],
+    path: [[0.5, 0.5]],
+    step: 0.15,
+    done: false,
+    autoTimer: null,
+  };
+
+  document.getElementById('s-step').addEventListener('input', e => {
+    state.step = +e.target.value;
+    document.getElementById('v-step').textContent = state.step.toFixed(2);
+  });
+
+  function doStep() {
+    if (state.done) return false;
+    const g = grad(state.x);
+    const trial = [state.x[0] - state.step * g[0], state.x[1] - state.step * g[1]];
+    const projected = feasible(trial) ? trial : projectPolytope(trial);
+    const delta = Math.hypot(projected[0] - state.x[0], projected[1] - state.x[1]);
+    state.x = projected;
+    state.path.push(projected.slice());
+    if (delta < 1e-3) state.done = true;
+    if (state.path.length > 80) state.done = true;
+    render();
+    return !state.done;
+  }
+  function reset() {
+    state.x = [0.5, 0.5];
+    state.path = [state.x.slice()];
+    state.done = false;
+    if (state.autoTimer) { clearInterval(state.autoTimer); state.autoTimer = null; document.getElementById('b-gd-auto').textContent = 'Auto-play'; }
+    render();
+  }
+  document.getElementById('b-gd-step').addEventListener('click', doStep);
+  document.getElementById('b-gd-reset').addEventListener('click', reset);
+  document.getElementById('b-gd-auto').addEventListener('click', () => {
+    const btn = document.getElementById('b-gd-auto');
+    if (state.autoTimer) {
+      clearInterval(state.autoTimer); state.autoTimer = null; btn.textContent = 'Auto-play';
+    } else {
+      btn.textContent = 'Stop';
+      state.autoTimer = setInterval(() => {
+        if (!doStep()) { clearInterval(state.autoTimer); state.autoTimer = null; btn.textContent = 'Auto-play'; }
+      }, 180);
+    }
+  });
+
+  function render() {
+    plot.clear();
+    plot.drawAxes({ step: 1, xlabel: 'x', ylabel: 'y' });
+    plot.fillPolygon(region, 'rgba(107,70,193,0.10)', '#6b46c1', 1.5);
+    // contours of f
+    const fMax = 25;
+    for (let k = 1; k <= 8; k++) {
+      const v = fMax * k / 8;
+      plot.drawEllipse(target, Q, v, 'rgba(107,70,193,0.28)', 1, [3, 3]);
+    }
+    // target (outside region)
+    plot.drawDot(target, '#c53030', 5, 'target');
+    // path
+    for (let i = 0; i < state.path.length - 1; i++) {
+      plot.drawLine(state.path[i], state.path[i + 1], '#b7791f', 2);
+    }
+    state.path.forEach((p, i) => {
+      const isLast = i === state.path.length - 1;
+      plot.drawDot(p, isLast ? (state.done ? '#2f855a' : '#b7791f') : 'rgba(183,121,31,0.6)', isLast ? 7 : 3);
+    });
+
+    const ro = document.getElementById('ro-gd');
+    const cur = state.path[state.path.length - 1];
+    ro.innerHTML =
+      `<span class="label-ro">Iteration:</span> ${state.path.length - 1}<br>` +
+      `<span class="label-ro">x =</span> (${cur[0].toFixed(3)}, ${cur[1].toFixed(3)})<br>` +
+      `<span class="label-ro">f(x) =</span> <span class="${state.done ? 'opt' : ''}">${f(cur).toFixed(3)}</span>` +
+      (state.done ? ' · converged' : '');
+  }
+
+  plot.onResize = render;
+  render();
+})();
+
+</script>
+
+</body>
+</html>
