@@ -1007,18 +1007,45 @@
 
     <section id="lp-apps">
       <h2>6 · Where LP shows up</h2>
-      <p>A tiny sample of the things LP is quietly running:</p>
+      <p>Here are some real jobs where LP is used behind the scenes:</p>
       <ul class="examples">
-        <li><strong>Airline crew scheduling</strong> — assign pilots and flight attendants to flights, minimizing cost while meeting rest, qualification, and home-base rules.</li>
-        <li><strong>Supply chain planning</strong> — decide how much of each product to make at each factory and ship through which warehouse to which region.</li>
-        <li><strong>Portfolio construction</strong> (linear version) — maximize expected return subject to a total-weight budget and per-asset caps.</li>
-        <li><strong>Network flow & routing</strong> — push as much data, oil, or electricity through a network as its pipe capacities allow.</li>
-        <li><strong>Diet & blending</strong> — the original 1940s application: cheapest mix of foods meeting nutritional requirements.</li>
+        <li>
+          <strong>Airline crew scheduling.</strong> Deciding which pilots and flight
+          attendants work on which flights. The goal is to pay as little as
+          possible, while still following rules about rest time, who is allowed
+          to fly which plane, and where each crew member lives.
+        </li>
+        <li>
+          <strong>Supply chain planning.</strong> Deciding how much of each
+          product a company should make in each factory, and then which
+          warehouse each product should pass through on its way to each region
+          or store.
+        </li>
+        <li>
+          <strong>Building an investment portfolio</strong> (simple version).
+          Deciding how much money to put in each investment, so that the
+          expected return is as high as possible. Rules: you cannot spend more
+          than you have, and you cannot put too much into a single investment.
+        </li>
+        <li>
+          <strong>Moving things through a network.</strong> Sending as much
+          data, oil, water, or electricity through a network of pipes and
+          cables as their limits allow — without any single pipe getting
+          overloaded.
+        </li>
+        <li>
+          <strong>Choosing the cheapest diet.</strong> This was the very first
+          LP problem, back in the 1940s. Find the cheapest mix of foods that
+          still gives a person all the nutrients (vitamins, calories,
+          protein, …) they need in a day.
+        </li>
       </ul>
       <p>
-        The unifying pattern: a goal that adds up linearly, constraints that are "no more than X"
-        or "at least Y", and variables that can be any non-negative amount. If your problem
-        fits that shape, you have a linear program.
+        What all these jobs have in common: <strong>a goal that is a simple sum
+        of the choices you make</strong>, <strong>rules of the form "at most X"
+        or "at least Y"</strong>, and <strong>quantities that cannot be
+        negative</strong> (you cannot produce −3 chairs). If a problem you meet
+        looks like that, it is a linear program — and you can solve it.
       </p>
     </section>
 
